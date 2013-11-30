@@ -142,23 +142,66 @@ class DiaryBook(models.Model):
         db_table = 'diary_book'
 
 class Seat(models.Model):
-    seat_id = models.IntegerField(primary_key=True)
+    id = models.IntegerField(
+        primary_key = True,
+        db_column = 'seat_id', 
+        editable = False
+    )
     diary_book = models.ForeignKey(DiaryBook)
-    seat_code = models.CharField(max_length=16L)
-    seat_datetime = models.DateTimeField()
-    seat_total_debit = models.DecimalField(max_digits=12, decimal_places=10)
-    seat_total_credit = models.DecimalField(max_digits=12, decimal_places=10)
-    seat_description = models.TextField()
-    seat_status = models.IntegerField()
+    code = models.CharField(
+        max_length = 16L, 
+        db_column = 'seat_code',
+        verbose_name = 'Code'
+    )
+    datetime = models.DateTimeField(
+        db_column = 'seat_datetime',
+        verbose_name = 'Datetime',
+        default = datetime.datetime.today
+    )
+    debit = models.DecimalField(
+        max_digits = 12,
+        decimal_places = 10,
+        db_column = 'seat_total_debit',
+        verbose_name = 'Total Debit'
+    )
+    credit = models.DecimalField(
+        max_digits = 12, 
+        decimal_places = 10,
+        db_column = 'seat_total_credit',
+        verbose_name = 'Total Credit'
+    )
+    description = models.TextField(
+    	db_column = 'seat_description',
+        verbose_name = 'Description'
+    )
+    status = models.IntegerField(
+        db_column = 'seat_status',
+        verbose_name = 'Status',
+        choices = STATUS
+    )
     class Meta:
         db_table = 'seat'
 
 class SeatDetail(models.Model):
-    seat_detail_id = models.IntegerField(primary_key=True)
+    id = models.IntegerField(
+        primary_key = True,
+        db_column = 'seat_detail_id', 
+        editable = False
+    )
     seat = models.ForeignKey(Seat)
     account = models.ForeignKey(Account)
-    seat_detail_debit = models.DecimalField(max_digits=12, decimal_places=10)
-    seat_detail_credit = models.DecimalField(max_digits=12, decimal_places=10)
+    debit = models.DecimalField(
+        max_digits = 12, 
+        decimal_places = 10,
+        db_column = 'seat_detail_debit',
+        verbose_name = 'Debit'
+    )
+    credit = models.DecimalField(
+        max_digits = 12, 
+        decimal_places = 10,
+        db_column = 'seat_detail_credit',
+        verbose_name = 'Credit'
+    )
     class Meta:
         db_table = 'seat_detail'
 
