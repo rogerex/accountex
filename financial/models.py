@@ -32,12 +32,17 @@ class Account(models.Model):
     )
     class Meta:
         db_table = 'account'
+    def __unicode__(self): 
+	return self.name
 
 class AccountType(models.Model):
     CODE_TYPES = (
        ('ACTIVE', 'Active'),
        ('PASIVE', 'Pasive'),
-       ('PATRIMONY', 'Patrimony'),
+       ('EXPENSE', 'Expense'),
+       ('ACTIVE_EXPENSE', 'Active Expense'),
+       ('CREDIT', 'Deposit'),
+       ('PATRIMONY', 'Patrimony')       
     )
     id = models.IntegerField(
         db_column = 'account_type_id', 
@@ -62,6 +67,8 @@ class AccountType(models.Model):
     )
     class Meta:
         db_table = 'account_type'
+    def __unicode__(self): 
+	return self.name
 
 class Balance(models.Model):
     id = models.IntegerField(
@@ -140,6 +147,8 @@ class DiaryBook(models.Model):
     )
     class Meta:
         db_table = 'diary_book'
+    def __unicode__(self): 
+	return self.title
 
 class Seat(models.Model):
     id = models.IntegerField(
@@ -151,6 +160,7 @@ class Seat(models.Model):
     code = models.CharField(
         max_length = 16L, 
         db_column = 'seat_code',
+        unique = True,
         verbose_name = 'Code'
     )
     datetime = models.DateTimeField(
@@ -158,15 +168,11 @@ class Seat(models.Model):
         verbose_name = 'Datetime',
         default = datetime.datetime.today
     )
-    debit = models.DecimalField(
-        max_digits = 12,
-        decimal_places = 10,
+    debit = models.FloatField(
         db_column = 'seat_total_debit',
         verbose_name = 'Total Debit'
     )
-    credit = models.DecimalField(
-        max_digits = 12, 
-        decimal_places = 10,
+    credit = models.FloatField(
         db_column = 'seat_total_credit',
         verbose_name = 'Total Credit'
     )
@@ -181,6 +187,8 @@ class Seat(models.Model):
     )
     class Meta:
         db_table = 'seat'
+    def __unicode__(self): 
+	return self.code
 
 class SeatDetail(models.Model):
     id = models.IntegerField(
@@ -189,19 +197,29 @@ class SeatDetail(models.Model):
         editable = False
     )
     seat = models.ForeignKey(Seat)
-    account = models.ForeignKey(Account)
-    debit = models.DecimalField(
-        max_digits = 12, 
-        decimal_places = 10,
-        db_column = 'seat_detail_debit',
+    debitAccount = models.ForeignKey(
+        Account,
+        db_column = 'account_debit_id',
+        verbose_name = 'Debit Account',
+        related_name = '2'
+    )
+    creditAccount = models.ForeignKey(
+        Account,
+        db_column = 'account_credit_id',
+        verbose_name = 'Credit Account',
+        related_name = '1'
+    )
+    mount = models.FloatField(
+        db_column = 'seat_detail_mount',
         verbose_name = 'Debit'
     )
-    credit = models.DecimalField(
-        max_digits = 12, 
-        decimal_places = 10,
-        db_column = 'seat_detail_credit',
-        verbose_name = 'Credit'
+    description = models.TextField(
+    	db_column = 'seat_detail_description',
+        verbose_name = 'Description'
     )
     class Meta:
         db_table = 'seat_detail'
+    def __unicode__(self): 
+        return ' '.join([self.seat.code, str(self.mount), '>>>Debit:', self.debitAccount.name, 'Credit:', self.creditAccount.name])
+
 
