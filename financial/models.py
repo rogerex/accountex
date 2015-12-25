@@ -152,7 +152,7 @@ class DiaryBook(models.Model):
 	return self.title
 
 class Seat(models.Model):
-    id = models.IntegerField(
+    id = models.AutoField(
         primary_key = True,
         db_column = 'seat_id', 
         editable = False
@@ -192,7 +192,7 @@ class Seat(models.Model):
 	return self.code
 
 class SeatDetail(models.Model):
-    id = models.IntegerField(
+    id = models.AutoField(
         primary_key = True,
         db_column = 'seat_detail_id', 
         editable = False
@@ -222,6 +222,16 @@ class SeatDetail(models.Model):
         db_table = 'seat_detail'
     def __unicode__(self): 
         return ' '.join([self.seat.code, str(self.mount), '>>>Debit:', self.debitAccount.name, 'Credit:', self.creditAccount.name])
+
+class SeatDetailInline(admin.TabularInline):
+    model = SeatDetail
+    extra = 3
+
+class SeatAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ('Seat information', {'fields' : ['diary_book', 'code', 'datetime', 'debit', 'credit', 'description', 'status'], 'classes': ['collapse']})
+    ]
+    inlines = [SeatDetailInline]
 
 class Vocabulary(models.Model):
     id = models.IntegerField(
