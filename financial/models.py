@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from django.contrib import admin
 from django.db import models
 import datetime
 
@@ -221,5 +222,50 @@ class SeatDetail(models.Model):
         db_table = 'seat_detail'
     def __unicode__(self): 
         return ' '.join([self.seat.code, str(self.mount), '>>>Debit:', self.debitAccount.name, 'Credit:', self.creditAccount.name])
+
+class Vocabulary(models.Model):
+    id = models.IntegerField(
+        primary_key = True,
+        db_column = 'vocabulary_id', 
+        editable = False
+    )
+    name = models.CharField(
+        max_length = 255L,
+    	db_column = 'vocabulary_name',
+        verbose_name = 'Name'
+    )
+    class Meta:
+        db_table = 'vocabulary'
+    def __unicode__(self): 
+	return self.name
+
+class Term(models.Model):
+    id = models.AutoField(
+        primary_key = True,
+        db_column = 'term_id', 
+        editable = False
+    )
+    vocabulary = models.ForeignKey(
+        Vocabulary,
+        db_column = 'vocabulary_id',
+        verbose_name = 'Vocabulary'
+    )
+    name = models.CharField(
+        max_length = 255L,
+    	db_column = 'term_name',
+        verbose_name = 'Name'
+    )
+    class Meta:
+        db_table = 'term'
+    def __unicode__(self): 
+	return self.name
+
+class TermInline(admin.TabularInline):
+    model = Term
+    extra = 1
+
+class VocabularyAdmin(admin.ModelAdmin):
+    fields = ['name']
+    inlines = [TermInline]
 
 
