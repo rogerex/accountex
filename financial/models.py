@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from django.contrib import admin
 from django.db import models
+from django.utils.html import escape, format_html
 import datetime
 
 # Create your models here.
@@ -186,6 +187,8 @@ class Seat(models.Model):
         verbose_name = 'Status',
         choices = STATUS
     )
+    def report(self):
+        return format_html('<a href="./{0}/report">Report</a>', str(self.id))
     class Meta:
         db_table = 'seat'
     def __unicode__(self): 
@@ -232,6 +235,7 @@ class SeatAdmin(admin.ModelAdmin):
         ('Seat information', {'fields' : ['diary_book', 'code', 'datetime', 'debit', 'credit', 'description', 'status'], 'classes': ['collapse']})
     ]
     inlines = [SeatDetailInline]
+    list_display = ['code', 'datetime', 'debit', 'credit', 'report', 'status']
 
 class Vocabulary(models.Model):
     id = models.IntegerField(
