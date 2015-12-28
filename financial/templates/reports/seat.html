@@ -9,46 +9,95 @@
 {% block breadcrumbs %}
 <div class="breadcrumbs">
 <a href="{% url 'admin:index' %}">Home</a>
-&rsaquo; <a href="#">Financial</a>
-&rsaquo; <a href="#">Seat</a>
+&rsaquo; <a href="../../../">Financial</a>
+&rsaquo; <a href="../../">Seat</a>
 &rsaquo; Report
 </div>
 {% endblock %}
 {% block content %}
-<h1>Seat Report {{ seat_id }}</h1>
 
-<canvas id="myChart" width="400" height="400"></canvas>
+<h1>Seat Report {{ seat }}</h1>
+<br />
+<div>
+  <div style="float:left">
+    <div><h1>Active movements (Debit vs Credit)</h1></div>
+    <div>
+      <canvas id="myChart" width="400" height="400"></canvas>
+    </div>
+    <div><h1>{{ debit }} - {{ credit }} = {{ debitMinusCredit }}</h1></div>
+  </div>
+
+  <div style="float:left; padding-left: 30px;">
+    <div><h1>Debit Accounts</h1></div>
+    <div>
+      <canvas id="myChart1" width="400" height="400"></canvas>
+    </div>
+    <div><h1>{{ debitTotal }}</h1></div>
+  </div>
+
+  <div style="float:left; padding-left: 30px;">
+    <div><h1>Credit Accounts</h1></div>
+    <div>
+      <canvas id="myChart2" width="400" height="400"></canvas>
+    </div>
+    <div><h1>{{ creditTotal }}</h1></div>
+  </div>
+</div>
 
 <script type="text/javascript">
 
-var data = {
-    labels: ["January", "February", "March", "April", "May", "June", "July"],
-    datasets: [
-        {
-            label: "My First dataset",
-            fillColor: "rgba(220,220,220,0.2)",
-            strokeColor: "rgba(220,220,220,1)",
-            pointColor: "rgba(220,220,220,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(220,220,220,1)",
-            data: [65, 59, 80, 81, 56, 55, 40]
-        },
-        {
-            label: "My Second dataset",
-            fillColor: "rgba(151,187,205,0.2)",
-            strokeColor: "rgba(151,187,205,1)",
-            pointColor: "rgba(151,187,205,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(151,187,205,1)",
-            data: [28, 48, 40, 19, 86, 27, 90]
-        }
-    ]
-};
+var data = [
+    {
+        value: {{ debit }},
+        color: "#46BFBD",
+        highlight: "#5AD3D1",
+        label: "Debit"
+    },
+    {
+        value: {{ credit }},
+        color: "#F7464A",
+        highlight: "#FF5A5E",
+        label: "Credit"
+    }
+];
 
-var ctx = document.getElementById("myChart").getContext("2d");
-var myLineChart = new Chart(ctx).Line(data, Chart.defaults.global);
+var colors = ["#46BFBD", "#F7464A", "#FDB45C", "#949FB1", "#4D5360", "#FF5A5E", "#5AD3D1", "#FFC870", "#A8B3C5", "#616774"]
+var i = 0;
+
+function getColor() {
+    i++;
+    return colors[(i-1)%colors.length];
+}
+
+var data1 = [
+    {% for key, value in debitAccounts.items %}
+    {
+        value: {{ value.mount }},
+        color: getColor(),
+        label: "{{ value.name }}"
+    },
+    {% endfor %}
+];
+
+i = 0;
+var data2 = [
+    {% for key, value in creditAccounts.items %}
+    {
+        value: {{ value.mount }},
+        color: getColor(),
+        label: "{{ value.name }}"
+    },
+    {% endfor %}
+];
+
+var ctx = [];
+ctx.push(document.getElementById("myChart").getContext("2d"));
+ctx.push(document.getElementById("myChart1").getContext("2d"));
+ctx.push(document.getElementById("myChart2").getContext("2d"));
+
+var principalPieChart = new Chart(ctx[0]).Doughnut(data, Chart.defaults.global);
+var debitPieChart = new Chart(ctx[1]).Pie(data1, Chart.defaults.global);
+var creditPieChart = new Chart(ctx[2]).Pie(data2, Chart.defaults.global);
 
 </script>
 {% endblock %}

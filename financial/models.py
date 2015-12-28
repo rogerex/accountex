@@ -215,7 +215,7 @@ class SeatDetail(models.Model):
     )
     mount = models.FloatField(
         db_column = 'seat_detail_mount',
-        verbose_name = 'Debit'
+        verbose_name = 'Mount'
     )
     description = models.TextField(
     	db_column = 'seat_detail_description',
