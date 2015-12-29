@@ -41,3 +41,8 @@ def seat_report(request, id):
 
     # pdb.set_trace()
     return render(request, 'reports/seat.html', context)
+
+def account_report(request, id):
+    context = {'account': id}
+    return render(request, 'reports/account.html', context)
+

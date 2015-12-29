@@ -34,8 +34,13 @@ class Account(models.Model):
     )
     class Meta:
         db_table = 'account'
+    def report(self):
+        return format_html('<a href="./{0}/report">Report</a>', str(self.id))
     def __unicode__(self): 
 	return self.name
+
+class AccountAdmin(admin.ModelAdmin):
+    list_display = ['id', 'account_type', 'code', 'name', 'datetime', 'report']
 
 class AccountType(models.Model):
     CODE_TYPES = (

@@ -1,0 +1,23 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block branding %}<h1 id="site-name">Report</h1>{% endblock %}
+{% block extrahead %}
+<script src="{% static "js/jquery-1.9.1.min.js" %}"></script>
+<script src="{% static "js/Chart.js" %}"></script>
+<script src="{% static "js/Chart.settings.js" %}"></script>
+{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">Home</a>
+&rsaquo; <a href="../../../">Financial</a>
+&rsaquo; <a href="../../">Accounts</a>
+&rsaquo; Report
+</div>
+{% endblock %}
+{% block content %}
+
+<h1>Account Report {{ account }}</h1>
+<br />
+Account Report
+{% endblock %}
+

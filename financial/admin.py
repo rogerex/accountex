@@ -1,8 +1,8 @@
 from django.contrib import admin
-from financial.models import AccountType, Account, Balance, BalanceDetail, DiaryBook, Seat, SeatDetail, Vocabulary, VocabularyAdmin, Term, TermInline, SeatAdmin
+from financial.models import AccountType, Account, AccountAdmin, Balance, BalanceDetail, DiaryBook, Seat, SeatDetail, Vocabulary, VocabularyAdmin, Term, TermInline, SeatAdmin
 
 admin.site.register(AccountType)
-admin.site.register(Account)
+admin.site.register(Account, AccountAdmin)
 admin.site.register(Balance)
 admin.site.register(BalanceDetail)
 admin.site.register(DiaryBook)
