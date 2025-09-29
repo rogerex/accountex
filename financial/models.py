@@ -18,6 +18,7 @@ class Account(models.Model):
         primary_key = True
     )
     account_type = models.ForeignKey('AccountType', on_delete=models.CASCADE)
+    currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
     code = models.CharField(
         db_column = 'account_code', 
         max_length = 16
@@ -43,7 +44,7 @@ class Account(models.Model):
         return self.name
 
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ['id', 'account_type', 'code', 'name', 'datetime', 'report']
+    list_display = ['id', 'account_type', 'code', 'name', 'currency', 'datetime', 'report']
 
 class AccountType(models.Model):
     CODE_TYPES = (
@@ -85,6 +86,23 @@ class AccountType(models.Model):
 
 class AccountTypeAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'report']
+
+class Currency(models.Model):
+    id = models.AutoField(
+        db_column = 'currency_id', 
+        editable = False,
+        primary_key = True
+    )
+    name = models.CharField(
+        db_column = 'currency_name',
+        verbose_name = 'Name',
+        max_length = 21,
+        default = 'XYZ Currency'
+    )
+    class Meta:
+        db_table = 'currency'
+    def __str__(self): 
+        return self.name
 
 class Balance(models.Model):
     id = models.IntegerField(
