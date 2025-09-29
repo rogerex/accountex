@@ -16,7 +16,7 @@
 {% endblock %}
 {% block content %}
 
-<h1>Account Report {{ account }}</h1>
+<h1>Account Report: {{ accountName }}</h1>
 <br />
 <div>
   <div>
@@ -42,7 +42,7 @@ var data1 = {
     labels: months,
     datasets: [
         {
-            label: {{ beforeLabel }},
+            label: "{{ beforeLabel }}",
             fillColor: "rgba(220,220,220,0.2)",
             strokeColor: "rgba(220,220,220,1)",
             pointColor: "rgba(220,220,220,1)",
@@ -56,7 +56,7 @@ var data1 = {
             ]
         },
         {
-            label: {{ afterLabel }},
+            label: "{{ afterLabel }}",
             fillColor: "rgba(151,187,205,0.2)",
             strokeColor: "rgba(151,187,205,1)",
             pointColor: "rgba(151,187,205,1)",
@@ -76,7 +76,7 @@ var data2 = {
     labels: months,
     datasets: [
         {
-            label: {{ beforeLabel }},
+            label: '{{ beforeLabel }}',
             fillColor: "rgba(220,220,220,0.2)",
             strokeColor: "rgba(220,220,220,1)",
             pointColor: "rgba(220,220,220,1)",
@@ -90,7 +90,7 @@ var data2 = {
             ]
         },
         {
-            label: {{ afterLabel }},
+            label: "{{ afterLabel }}",
             fillColor: "rgba(151,187,205,0.2)",
             strokeColor: "rgba(151,187,205,1)",
             pointColor: "rgba(151,187,205,1)",
