@@ -16,8 +16,8 @@
 {% endblock %}
 {% block content %}
 
-<h1>Account Type: {{ accountTypeName }}</h1>
-<h1> Currency: {{ currencyName }}</h1>
+<h1>Account Type: <strong>{{ accountTypeName }}</strong></h1>
+<h1> Currency: <strong>{{ currencyName }}</strong></h1>
 <br />
 <form method="get" action="{% url 'account_type_report' accountTypeId %}">
     <label for="my_currency">Select a Currency:</label>
@@ -29,19 +29,32 @@
 </form>
 <br />
 <div class="row">
-  <div class="col-6">
+  <div class="column">
     <div><h1>Debit Movements</h1></div>
     <div>
       <canvas id="myChart1" width="800" height="400"></canvas>
     </div>
   </div>
-  <div class="col-6">
+  <div class="column">
     <div><h1>Credit Movements</h1></div>
     <div>
       <canvas id="myChart2" width="800" height="400"></canvas>
     </div>
   </div>
 </div>
+<style>
+.column {
+  float: left;
+  width: 50%;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+</style>
 <script type="text/javascript">
 
 var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
