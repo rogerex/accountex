@@ -17,17 +17,25 @@
 {% block content %}
 
 <h1>Account Type: {{ accountTypeName }}</h1>
+<h1> Currency: {{ currencyName }}</h1>
 <br />
-<div>
-  <div>
+<form method="get" action="{% url 'account_type_report' accountTypeId %}">
+    <label for="my_currency">Select a Currency:</label>
+    <select name="currencyId" id="my_currency" onchange="this.form.submit()">
+        <option value="1" {% if currencyId == '1' %}selected{% endif %}>BOB</option>
+        <option value="2" {% if currencyId == '2' %}selected{% endif %}>USD</option>
+    </select>
+    <noscript><input type="submit" value="Apply"></noscript>
+</form>
+<br />
+<div class="row">
+  <div class="col-6">
     <div><h1>Debit Movements</h1></div>
     <div>
       <canvas id="myChart1" width="800" height="400"></canvas>
     </div>
   </div>
-  <br />
-  <br />
-  <div>
+  <div class="col-6">
     <div><h1>Credit Movements</h1></div>
     <div>
       <canvas id="myChart2" width="800" height="400"></canvas>
