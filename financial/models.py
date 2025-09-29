@@ -75,10 +75,16 @@ class AccountType(models.Model):
         db_column = 'account_type_description', 
         verbose_name = 'Description'
     )
+
+    def report(self):
+        return format_html('<a href="../account-type/{0}/report">Report</a>', str(self.id))
     class Meta:
         db_table = 'account_type'
     def __str__(self): 
         return self.name
+
+class AccountTypeAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'report']
 
 class Balance(models.Model):
     id = models.IntegerField(
