@@ -1,47 +1,8 @@
 # Create your views here.
-from django.http import HttpResponse
 from django.shortcuts import render
-from django.http import Http404
 from financial.models import SeatDetail, Account
 from datetime import date
 from calendar import monthrange
-
-def seat_report(request, id):
-    try:
-        seatDetails = SeatDetail.objects.filter(seat__id=id)
-    except SeatDetail.DoesNotExist:
-        raise Http404
-
-    debit = 0
-    credit = 0
-    debitTotal = 0
-    creditTotal = 0
-    debitAccounts = {}
-    creditAccounts = {}
-
-    for detail in seatDetails:
-       if detail.debitAccount.account_type.id in [1,2,3]:
-           debit += detail.mount
-       if detail.creditAccount.account_type.id in [1,2,3]:
-           credit += detail.mount
-
-       if str(detail.debitAccount.id) in debitAccounts:
-           debitAccounts[str(detail.debitAccount.id)]['mount'] += detail.mount
-       else:
-           debitAccounts[str(detail.debitAccount.id)] = { 'name': detail.debitAccount.name, 'mount': detail.mount }
-
-       if str(detail.creditAccount.id) in creditAccounts:
-           creditAccounts[str(detail.creditAccount.id)]['mount'] += detail.mount
-       else:
-           creditAccounts[str(detail.creditAccount.id)] = { 'name': detail.creditAccount.name, 'mount': detail.mount }
-
-       debitTotal += detail.mount
-       creditTotal += detail.mount
-       
-    context = {'debit': debit, 'credit': credit, 'seat': id, 'debitAccounts': debitAccounts, 'creditAccounts': creditAccounts, 'creditTotal': creditTotal, 'debitTotal': debitTotal, 'debitMinusCredit': debit - credit}
-
-    # pdb.set_trace()
-    return render(request, 'reports/seat.html', context)
 
 def account_report(request, id):
     before = 2024
