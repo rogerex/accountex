@@ -3,11 +3,27 @@ from financial.models import AccountType, SeatDetail, Currency
 from datetime import date
 from calendar import monthrange
 
+class DataAccountType:
+    def __init__(self):
+        self.label = None
+        self.values = []
+
 def account_type_report(request, id):
     currencyId = request.GET.get('currencyId', 1)
-    before = 2024
-    after = 2025
-    years = [before, after]
+    yearsTotal = request.GET.get('years', 2)
+    yearsToCompare = int(yearsTotal)
+
+    current_datetime = date.today()
+    # Extract the year attribute
+    year = current_datetime.year
+
+    years = []
+    while yearsToCompare > 0:
+        years.append(year)
+        year -= 1
+        yearsToCompare -= 1
+
+    years = sorted(years)
     debits = []
     credits = []
 
@@ -23,7 +39,11 @@ def account_type_report(request, id):
             for detail in details:
                 value += detail.mount 
             values[month - 1] = value
-        debits.append(values)
+
+        debit = DataAccountType()
+        debit.label = str(year)
+        debit.values = values
+        debits.append(debit)
 
     for year in years:
         values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -37,10 +57,14 @@ def account_type_report(request, id):
             for detail in details:
                 value += detail.mount 
             values[month - 1] = value
-        credits.append(values)
+
+        credit = DataAccountType()
+        credit.label = str(year)
+        credit.values = values
+        credits.append(credit)
 
     accountType = AccountType.objects.get(id=id)
     currency = Currency.objects.get(id=currencyId)
 
-    context = {'accountTypeId': id, 'accountTypeName': accountType.name, 'currencyId': currencyId, 'currencyName': currency.name, 'beforeLabel':str(before), 'afterLabel':str(after), 'beforeDebitMounts': debits[0], 'afterDebitMounts': debits[1], 'beforeCreditMounts': credits[0], 'afterCreditMounts': credits[1]}
+    context = {'accountTypeId': id, 'accountTypeName': accountType.name, 'currencyId': currencyId, 'currencyName': currency.name, 'debits': debits, 'credits': credits, 'years': int(yearsTotal), 'allowedYears': range(1, 15)}
     return render(request, 'reports/account-type.html', context)

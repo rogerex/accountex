@@ -23,6 +23,12 @@
         <option value="1" {% if currencyId == '1' %}selected{% endif %}>BOB</option>
         <option value="2" {% if currencyId == '2' %}selected{% endif %}>USD</option>
     </select>
+    <label for="my_years">Select amount of years:</label>
+    <select name="years" id="my_years" onchange="this.form.submit()">
+      {% for count in allowedYears %}
+        <option value="{{ count }}" {% if years == count %}selected{% endif %}>{{ count }}</option>
+      {% endfor %}
+    </select>
     <noscript><input type="submit" value="Apply"></noscript>
 </form>
 <br />
@@ -60,8 +66,9 @@ var months = ["January", "February", "March", "April", "May", "June", "July", "A
 var data1 = {
     labels: months,
     datasets: [
-        {
-            label: "{{ beforeLabel }}",
+        {% for debit in debits %}
+          {
+            label: "{{ debit.label }}",
             fillColor: "rgba(220,220,220,0.2)",
             strokeColor: "rgba(220,220,220,1)",
             pointColor: "rgba(220,220,220,1)",
@@ -69,33 +76,21 @@ var data1 = {
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(220,220,220,1)",
             data: [
-            {% for value in beforeDebitMounts %}
+            {% for value in debit.values %}
             {{ value }},
             {% endfor %}
             ]
-        },
-        {
-            label: "{{ afterLabel }}",
-            fillColor: "rgba(151,187,205,0.2)",
-            strokeColor: "rgba(151,187,205,1)",
-            pointColor: "rgba(151,187,205,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(151,187,205,1)",
-            data: [
-            {% for value in afterDebitMounts %}
-            {{ value }},
-            {% endfor %}
-            ]
-        }
+          },
+        {% endfor %}
     ]
 };
 
 var data2 = {
     labels: months,
     datasets: [
-        {
-            label: '{{ beforeLabel }}',
+        {% for credit in credits %}
+          {
+            label: "{{ credit.label }}",
             fillColor: "rgba(220,220,220,0.2)",
             strokeColor: "rgba(220,220,220,1)",
             pointColor: "rgba(220,220,220,1)",
@@ -103,25 +98,12 @@ var data2 = {
             pointHighlightFill: "#fff",
             pointHighlightStroke: "rgba(220,220,220,1)",
             data: [
-            {% for value in beforeCreditMounts %}
+            {% for value in credit.values %}
             {{ value }},
             {% endfor %}
             ]
-        },
-        {
-            label: "{{ afterLabel }}",
-            fillColor: "rgba(151,187,205,0.2)",
-            strokeColor: "rgba(151,187,205,1)",
-            pointColor: "rgba(151,187,205,1)",
-            pointStrokeColor: "#fff",
-            pointHighlightFill: "#fff",
-            pointHighlightStroke: "rgba(151,187,205,1)",
-            data: [
-            {% for value in afterCreditMounts %}
-            {{ value }},
-            {% endfor %}
-            ]
-        }
+          },
+        {% endfor %}
     ]
 };
 
