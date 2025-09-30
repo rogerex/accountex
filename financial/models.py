@@ -99,6 +99,16 @@ class Currency(models.Model):
         max_length = 21,
         default = 'XYZ Currency'
     )
+    code = models.CharField(
+        db_column = 'currency_code',
+        verbose_name = 'Code',
+        max_length = 11,
+    )
+    symbol = models.CharField(
+        db_column = 'currency_symbol',
+        verbose_name = 'Symbol',
+        max_length = 11,
+    )
     class Meta:
         db_table = 'currency'
     def __str__(self): 

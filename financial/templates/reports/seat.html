@@ -2,9 +2,7 @@
 {% load static %}
 {% block branding %}<h1 id="site-name">Report</h1>{% endblock %}
 {% block extrahead %}
-<script src="{% static "js/jquery-1.9.1.min.js" %}"></script>
-<script src="{% static "js/Chart.js" %}"></script>
-<script src="{% static "js/Chart.settings.js" %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 {% block breadcrumbs %}
 <div class="breadcrumbs">
@@ -71,50 +69,118 @@ function getColor() {
   </div>
   <script type="text/javascript">
 
-  var data = [
-    {
-        value: {{ seatSummary.debit }},
-        color: "#46BFBD",
-        highlight: "#5AD3D1",
-        label: "Debit"
-    },
-    {
-        value: {{ seatSummary.credit }},
-        color: "#F7464A",
-        highlight: "#FF5A5E",
-        label: "Credit"
-    }
-  ];
-
-  var data1 = [
-    {% for key, value in seatSummary.debitAccounts.items %}
-    {
-        value: {{ value.mount }},
-        color: getColor(),
-        label: "{{ value.name }}"
-    },
-    {% endfor %}
-  ];
+  var data = {
+    labels: ["Debit", "Credit"],
+    datasets: [
+      {
+          data: [{{ seatSummary.debit }}, {{ seatSummary.credit }}],
+          backgroundColor: ["#46BFBD", "#F7464A"],
+          label: "{{ seatSummary.currency.symbol }}"
+      }
+    ]
+  };
 
   i = 0;
-  var data2 = [
-    {% for key, value in seatSummary.creditAccounts.items %}
-    {
-        value: {{ value.mount }},
-        color: getColor(),
-        label: "{{ value.name }}"
-    },
-    {% endfor %}
-  ];
+  var data1 = {
+    labels: [
+      {% for key, value in seatSummary.debitAccounts.items %}
+      "{{ value.name }}",
+      {% endfor %}
+    ],
+    datasets: [
+      {
+        data: [
+          {% for key, value in seatSummary.debitAccounts.items %}
+          "{{ value.mount }}",
+          {% endfor %}
+        ],
+        backgroundColor: [
+          {% for key, value in seatSummary.debitAccounts.items %}
+          getColor(),
+          {% endfor %}
+        ],
+        label: "{{ seatSummary.currency.symbol }}"
+      },
+    ]
+  };
+
+  i = 0;
+  var data2 = {
+    labels: [
+      {% for key, value in seatSummary.creditAccounts.items %}
+      "{{ value.name }}",
+      {% endfor %}
+    ],
+    datasets: [
+      {
+        data: [
+          {% for key, value in seatSummary.creditAccounts.items %}
+          "{{ value.mount }}",
+          {% endfor %}
+        ],
+        backgroundColor: [
+          {% for key, value in seatSummary.creditAccounts.items %}
+          getColor(),
+          {% endfor %}
+        ],
+        label: "{{ seatSummary.currency.symbol }}"
+      },
+    ]
+  };
 
   var ctx = [];
   ctx.push(document.getElementById("{{seatSummary.currency.id}}myChart").getContext("2d"));
   ctx.push(document.getElementById("{{seatSummary.currency.id}}myChart1").getContext("2d"));
   ctx.push(document.getElementById("{{seatSummary.currency.id}}myChart2").getContext("2d"));
 
-  var principalPieChart = new Chart(ctx[0]).Doughnut(data, Chart.defaults.global);
-  var debitPieChart = new Chart(ctx[1]).Pie(data1, Chart.defaults.global);
-  var creditPieChart = new Chart(ctx[2]).Pie(data2, Chart.defaults.global);
+  var principalPieChart = new Chart(ctx[0], {
+    type: 'doughnut',
+    data: data,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Active movements (Debit vs Credit)'
+        }
+      }
+    },
+  });
+  var debitPieChart = new Chart(ctx[1], {
+    type: 'pie',
+    data: data1,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Debit Accounts'
+        }
+      }
+    },
+  });
+  var creditPieChart = new Chart(ctx[2], {
+    type: 'pie',
+    data: data2,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+        },
+        title: {
+          display: true,
+          text: 'Credit Accounts'
+        }
+      }
+    },
+  });
 
   </script>
   <br />

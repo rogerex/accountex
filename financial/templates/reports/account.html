@@ -2,9 +2,7 @@
 {% load static %}
 {% block branding %}<h1 id="site-name">Report</h1>{% endblock %}
 {% block extrahead %}
-<script src="{% static "js/jquery-1.9.1.min.js" %}"></script>
-<script src="{% static "js/Chart.js" %}"></script>
-<script src="{% static "js/Chart.settings.js" %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 {% block breadcrumbs %}
 <div class="breadcrumbs">
@@ -15,11 +13,23 @@
 </div>
 {% endblock %}
 {% block content %}
+<style>
+.column {
+  float: left;
+  width: 50%;
+}
 
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+</style>
 <h1>Account Report: {{ accountName }}</h1>
 <br />
-<div>
-  <div>
+<div class="row">
+  <div class="column">
     <div><h1>Debit Movements</h1></div>
     <div>
       <canvas id="myChart1" width="800" height="400"></canvas>
@@ -27,7 +37,7 @@
   </div>
   <br />
   <br />
-  <div>
+  <div class="column">
     <div><h1>Credit Movements</h1></div>
     <div>
       <canvas id="myChart2" width="800" height="400"></canvas>
@@ -110,8 +120,38 @@ var ctx = [];
 ctx.push(document.getElementById("myChart1").getContext("2d"));
 ctx.push(document.getElementById("myChart2").getContext("2d"));
 
-var debitLineChart = new Chart(ctx[0]).Line(data1, Chart.defaults.global);
-var creditLineChart = new Chart(ctx[1]).Line(data2, Chart.defaults.global);
+var debitLineChart = new Chart(ctx[0], {
+  type: 'line',
+  data: data1,
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Debit Movements'
+      }
+    }
+  },
+});
+var creditLineChart = new Chart(ctx[1], {
+  type: 'line',
+  data: data2,
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Credit Movements'
+      }
+    }
+  },
+});
 
 </script>
 {% endblock %}
