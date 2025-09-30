@@ -2,11 +2,7 @@ from django.shortcuts import render
 from financial.models import AccountType, SeatDetail, Currency
 from datetime import date
 from calendar import monthrange
-
-class DataAccountType:
-    def __init__(self):
-        self.label = None
-        self.values = []
+from .models.shared import DataLine
 
 def account_type_report(request, id):
     currencyId = request.GET.get('currencyId', 1)
@@ -40,7 +36,7 @@ def account_type_report(request, id):
                 value += detail.mount 
             values[month - 1] = value
 
-        debit = DataAccountType()
+        debit = DataLine()
         debit.label = str(year)
         debit.values = values
         debits.append(debit)
@@ -58,7 +54,7 @@ def account_type_report(request, id):
                 value += detail.mount 
             values[month - 1] = value
 
-        credit = DataAccountType()
+        credit = DataLine()
         credit.label = str(year)
         credit.values = values
         credits.append(credit)
