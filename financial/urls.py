@@ -11,4 +11,5 @@ urlpatterns = [
     re_path(r'^financial/account/(?P<id>\d+)/report/$', account_report, name='account_report'),
     # ex: /account-type/5/report/
     re_path(r'^financial/account-type/(?P<id>\d+)/report/$', account_type_report, name='account_type_report'),
+    re_path(r'^financial/patrimony/$', views.execute_patrimony_raw_sql, name='patrimony_report'),
 ]

@@ -1,0 +1,179 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block branding %}<h1 id="site-name">Patrimony</h1>{% endblock %}
+{% block extrahead %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">Home</a>
+&rsaquo; <a href="../../financial/">Financial</a>
+&rsaquo; Patrimony
+</div>
+{% endblock %}
+{% block content %}
+
+<h1>Patrimony: <strong>{{ datetime }}</strong></h1>
+<br />
+
+<style>
+.column {
+  float: left;
+  width: 33%;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+</style>
+<script>
+var colors = ["#46BFBD", "#F7464A", "#FDB45C", "#949FB1", "#4D5360", "#FF5A5E", "#5AD3D1", "#FFC870", "#A8B3C5", "#616774"]
+var i = 0;
+
+function getColor() {
+  i++;
+  return colors[(i-1)%colors.length];
+}
+</script>
+<div class="row">
+  {% for currencyTagGroup in viewCurrencyTagGroups %}
+    <div class="column">
+      <div><h1>{{ currencyTagGroup.currency.name }}</h1></div>
+      <div>
+        <canvas id="{{currencyTagGroup.currency.id}}myChart" width="400" height="400"></canvas>
+      </div>
+      <div><h1>{{ currencyTagGroup.currency.symbol }} {{ currencyTagGroup.total }}</h1></div>
+    </div>
+    <script>
+      var i = 0;
+      var data = {
+        labels: [
+          {% for value in currencyTagGroup.tagGroups %}
+          "{{ value.name }}",
+          {% endfor %}
+        ],
+        datasets: [
+          {
+            data: [
+              {% for value in currencyTagGroup.tagGroups %}
+              "{{ value.total }}",
+              {% endfor %}
+            ],
+            backgroundColor: [
+              {% for value in currencyTagGroup.tagGroups %}
+              getColor(),
+              {% endfor %}
+            ],
+            label: "{{ currencyTagGroup.currency.symbol }}"
+          },
+        ]
+      };
+      i = 0;
+      data.datasets.push({
+        data: [
+          {% for value in currencyTagGroup.tagGroups %}
+          "{{ value.percentage }}",
+          {% endfor %}
+        ],
+        backgroundColor: [
+          {% for value in currencyTagGroup.tagGroups %}
+          getColor(),
+          {% endfor %}
+        ],
+        label: "%"
+      });
+      var ctx = document.getElementById("{{currencyTagGroup.currency.id}}myChart").getContext("2d");
+
+      var pieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: data,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Patrimony by Tags'
+            },
+          }
+        },
+      });
+    </script>
+  {% endfor %}
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Account Id</th>
+      <th class="sortable">Account Name</th>
+      <th class="sortable">Debit</th>
+      <th class="sortable">Credit</th>
+      <th class="sortable">Saldo</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for row in rows %}
+    <tr>
+      <td><a href="/admin/financial/account/{{ row.account_id }}/change/?_changelist_filters=p%3D2">{{ row.account_id }}</a></td>
+      <td>{{ row.account_name }}</td>
+      <td>{{ row.debit }}</td>
+      <td>{{ row.credit }}</td>
+      <td>{{ row.saldo }}</td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+
+{% for currencyTagGroup in currencyTagGroups %}
+  <h2>{{ currencyTagGroup.currency.name }} - {{ currencyTagGroup.total }}</h2>
+  <div class="row">
+    {% for tagGroup in currencyTagGroup.tagGroups %}
+      <div class="column">
+        <h3>{{ tagGroup.name }} ( {{ tagGroup.percentage }}%, {{ currencyTagGroup.currency.symbol }}: {{ tagGroup.total }})</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Account Id</th>
+              <th class="sortable">Account Name</th>
+              <th class="sortable">Debit</th>
+              <th class="sortable">Credit</th>
+              <th class="sortable">Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for row in tagGroup.rows %}
+            <tr>
+              <td><a href="/admin/financial/account/{{ row.account_id }}/change/?_changelist_filters=p%3D2">{{ row.account_id }}</a></td>
+              <td>{{ row.account_name }}</td>
+              <td>{{ row.debit }}</td>
+              <td>{{ row.credit }}</td>
+              <td>{{ row.saldo }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+  </div>
+{% endfor %}
+
+<h2>Deleted Rows</h2>
+{% for row in deletedRows %}
+  {{ row.account_name }} / {{ row.saldo }}
+  <br />
+{% endfor %}
+
+<h2>Ignored Rows</h2>
+{% for row in ignoredRows %}
+  {{ row.account_name }} /{{ row.saldo }}
+  <br />
+{% endfor %}
+
+{% endblock %}
+
