@@ -14,7 +14,7 @@
 </div>
 {% endblock %}
 {% block content %}
-<h1>Patrimony: <span class="badge bg-secondary">{{ datetime }}</span></h1>
+<h1>Generated at: <span class="badge bg-secondary">{{ datetime }}</span></h1>
 <br />
 
 <script>
@@ -27,171 +27,211 @@ function getColor() {
 }
 </script>
 
-<div class="row">
-  {% for currencyTagGroup in viewCurrencyTagGroups %}
-    <div class="col-4">
-      <div><h1>{{ currencyTagGroup.currency.name }}</h1></div>
-      <div>
-        <canvas id="{{currencyTagGroup.currency.id}}myChart" width="400" height="400"></canvas>
+<div class="d-flex align-items-start">
+  <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+    <button class="nav-link active" id="v-pills-charts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-charts" type="button" role="tab" aria-controls="v-pills-charts" aria-selected="true">Charts</button>
+    <button class="nav-link" id="v-pills-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-accounts" type="button" role="tab" aria-controls="v-pills-accounts" aria-selected="false">Accounts</button>
+    <button class="nav-link" id="v-pills-details-tab" data-bs-toggle="pill" data-bs-target="#v-pills-details" type="button" role="tab" aria-controls="v-pills-details" aria-selected="false">Details by Currency</button>
+    <button class="nav-link" id="v-pills-other-rows-tab" data-bs-toggle="pill" data-bs-target="#v-pills-other-rows" type="button" role="tab" aria-controls="v-pills-other-rows" aria-selected="false">Deleted and Ignored Rows</button>
+  </div>
+  <div class="tab-content w-100" id="v-pills-tabContent">
+    <div class="tab-pane fade show active" id="v-pills-charts" role="tabpanel" aria-labelledby="v-pills-charts-tab" tabindex="0">
+      <!-- Charts -->
+      <div class="row">
+        {% for currencyTagGroup in viewCurrencyTagGroups %}
+          <div class="col-6">
+            <div><h1>{{ currencyTagGroup.currency.name }} <span class="badge bg-secondary">{{ currencyTagGroup.currency.symbol }}: {{ currencyTagGroup.total|floatformat:2 }}</span></h1></div>
+            <div>
+              <canvas id="{{currencyTagGroup.currency.id}}myChart" width="400" height="400"></canvas>
+            </div>
+            <div><h1>{{ currencyTagGroup.currency.symbol }} {{ currencyTagGroup.total|floatformat:2 }}</h1></div>
+          </div>
+          <script>
+            var i = 0;
+            var data = {
+              labels: [
+                {% for value in currencyTagGroup.tagGroups %}
+                "{{ value.name }}",
+                {% endfor %}
+              ],
+              datasets: [
+                {
+                  data: [
+                    {% for value in currencyTagGroup.tagGroups %}
+                    "{{ value.total }}",
+                    {% endfor %}
+                  ],
+                  backgroundColor: [
+                    {% for value in currencyTagGroup.tagGroups %}
+                    getColor(),
+                    {% endfor %}
+                  ],
+                  label: "{{ currencyTagGroup.currency.symbol }}"
+                },
+              ]
+            };
+            i = 0;
+            data.datasets.push({
+              data: [
+                {% for value in currencyTagGroup.tagGroups %}
+                "{{ value.percentage }}",
+                {% endfor %}
+              ],
+              backgroundColor: [
+                {% for value in currencyTagGroup.tagGroups %}
+                getColor(),
+                {% endfor %}
+              ],
+              label: "%"
+            });
+            var ctx = document.getElementById("{{currencyTagGroup.currency.id}}myChart").getContext("2d");
+
+            var pieChart = new Chart(ctx, {
+              type: 'doughnut',
+              data: data,
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: 'top',
+                  },
+                  title: {
+                    display: true,
+                    text: 'Patrimony by Tags'
+                  },
+                }
+              },
+            });
+          </script>
+        {% endfor %}
       </div>
-      <div><h1>{{ currencyTagGroup.currency.symbol }} {{ currencyTagGroup.total|floatformat:2 }}</h1></div>
     </div>
-    <script>
-      var i = 0;
-      var data = {
-        labels: [
-          {% for value in currencyTagGroup.tagGroups %}
-          "{{ value.name }}",
-          {% endfor %}
-        ],
-        datasets: [
-          {
-            data: [
-              {% for value in currencyTagGroup.tagGroups %}
-              "{{ value.total }}",
-              {% endfor %}
-            ],
-            backgroundColor: [
-              {% for value in currencyTagGroup.tagGroups %}
-              getColor(),
-              {% endfor %}
-            ],
-            label: "{{ currencyTagGroup.currency.symbol }}"
-          },
-        ]
-      };
-      i = 0;
-      data.datasets.push({
-        data: [
-          {% for value in currencyTagGroup.tagGroups %}
-          "{{ value.percentage }}",
-          {% endfor %}
-        ],
-        backgroundColor: [
-          {% for value in currencyTagGroup.tagGroups %}
-          getColor(),
-          {% endfor %}
-        ],
-        label: "%"
-      });
-      var ctx = document.getElementById("{{currencyTagGroup.currency.id}}myChart").getContext("2d");
 
-      var pieChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: data,
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
-            },
-            title: {
-              display: true,
-              text: 'Patrimony by Tags'
-            },
-          }
-        },
-      });
-    </script>
-  {% endfor %}
-</div>
+    <div class="tab-pane fade" id="v-pills-accounts" role="tabpanel" aria-labelledby="v-pills-accounts-tab" tabindex="0">
+      <!-- Table (Account details) -->
+      <table>
+        <thead>
+          <tr>
+            <th>Account Id</th>
+            <th class="sortable">Account Name</th>
+            <th class="sortable">Debit</th>
+            <th class="sortable">Credit</th>
+            <th class="sortable">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+      {% for row in rows %}
+          <tr>
+            <td><a href="/admin/financial/account/{{ row.account_id }}/change/?_changelist_filters=p%3D2">{{ row.account_id }}</a></td>
+            <td>{{ row.account_name }}</td>
+            <td>{{ row.debit }}</td>
+            <td>{{ row.credit }}</td>
+            <td>{{ row.saldo }}</td>
+          </tr>
+      {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Account Id</th>
-      <th class="sortable">Account Name</th>
-      <th class="sortable">Debit</th>
-      <th class="sortable">Credit</th>
-      <th class="sortable">Saldo</th>
-    </tr>
-  </thead>
-  <tbody>
-{% for row in rows %}
-    <tr>
-      <td><a href="/admin/financial/account/{{ row.account_id }}/change/?_changelist_filters=p%3D2">{{ row.account_id }}</a></td>
-      <td>{{ row.account_name }}</td>
-      <td>{{ row.debit }}</td>
-      <td>{{ row.credit }}</td>
-      <td>{{ row.saldo }}</td>
-    </tr>
-{% endfor %}
-  </tbody>
-</table>
-
-{% for currencyTagGroup in currencyTagGroups %}
-  <h2>{{ currencyTagGroup.currency.name }} <span class="badge bg-secondary">{{ currencyTagGroup.total|floatformat:2 }}</span></h2>
-  <div class="row">
-    {% for tagGroup in currencyTagGroup.tagGroups %}
-      <div class="col-4">
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">{{ tagGroup.name }}</h5>
-            <h6 class="card-subtitle mb-2 text-muted">
-              <span class="badge bg-secondary">{{ tagGroup.percentage|floatformat:2 }}%</span>
-              <span class="badge bg-secondary">{{ currencyTagGroup.currency.symbol }}: {{ tagGroup.total|floatformat:2 }}</span>
-            </h6>
-            <table>
-              <thead>
-                <tr>
-                  <th>Account Id</th>
-                  <th class="sortable">Account Name</th>
-                  <th class="sortable">Debit</th>
-                  <th class="sortable">Credit</th>
-                  <th class="sortable">Saldo</th>
-                </tr>
-              </thead>
-              <tbody>
-              {% for row in tagGroup.rows %}
-                <tr>
-                  <td><a href="/admin/financial/account/{{ row.account_id }}/change/">{{ row.account_id }}</a></td>
-                  <td>{{ row.account_name }}</td>
-                  <td>{{ row.debit }}</td>
-                  <td>{{ row.credit }}</td>
-                  <td>{{ row.saldo }}</td>
-                </tr>
-              {% endfor %}
-              </tbody>
-            </table>
+    <div class="tab-pane fade" id="v-pills-details" role="tabpanel" aria-labelledby="v-pills-details-tab" tabindex="0">
+      <!-- Account details by Currency -->
+      <ul class="nav nav-tabs" id="detailsTabs" role="tablist">
+        {% for currencyTagGroup in currencyTagGroups %}
+        <li class="nav-item" role="presentation" style="list-style-type: none;">
+          <button class="nav-link {% if forloop.first %}active{% endif %}" id="currency-{{ currencyTagGroup.currency.id }}-tab" data-bs-toggle="tab" data-bs-target="#currency-{{ currencyTagGroup.currency.id }}" type="button" role="tab" aria-controls="currency-{{ currencyTagGroup.currency.id }}" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+            <h3>{{ currencyTagGroup.currency.name }} <span class="badge bg-secondary">{{ currencyTagGroup.total|floatformat:2 }}</span></h3>
+          </button>
+        </li>
+        {% endfor %}
+      </ul>
+      <div class="tab-content" id="detailsTabContent">
+        {% for currencyTagGroup in currencyTagGroups %}
+        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="currency-{{ currencyTagGroup.currency.id }}" role="tabpanel" aria-labelledby="currency-{{ currencyTagGroup.currency.id }}-tab">
+          <div class="row">
+            {% for tagGroup in currencyTagGroup.tagGroups %}
+            <div class="col-4">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">{{ tagGroup.name }}</h5>
+                  <h6 class="card-subtitle mb-2 text-muted">
+                    <span class="badge bg-secondary">{{ tagGroup.percentage|floatformat:2 }}%</span>
+                    <span class="badge bg-secondary">{{ currencyTagGroup.currency.symbol }}: {{ tagGroup.total|floatformat:2 }}</span>
+                  </h6>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Account Id</th>
+                        <th class="sortable">Account Name</th>
+                        <th class="sortable">Debit</th>
+                        <th class="sortable">Credit</th>
+                        <th class="sortable">Saldo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in tagGroup.rows %}
+                      <tr>
+                        <td><a href="/admin/financial/account/{{ row.account_id }}/change/">{{ row.account_id }}</a></td>
+                        <td>{{ row.account_name }}</td>
+                        <td>{{ row.debit }}</td>
+                        <td>{{ row.credit }}</td>
+                        <td>{{ row.saldo }}</td>
+                      </tr>
+                    {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
           </div>
         </div>
+        {% endfor %}
       </div>
-    {% endfor %}
-  </div>
-{% endfor %}
+    </div>
 
-<ul class="nav nav-tabs" id="myTab" role="tablist">
-  <li class="nav-item" role="presentation" style="list-style-type: none;">
-    <button class="nav-link active" id="deleted-rows-tab" data-bs-toggle="tab" data-bs-target="#deletedRows" type="button" role="tab" aria-controls="deletedRows" aria-selected="true">Deleted Rows</button>
-  </li>
-  <li class="nav-item" role="presentation" style="list-style-type: none;">
-    <button class="nav-link" id="ignored-rows-tab" data-bs-toggle="tab" data-bs-target="#ignoredRows" type="button" role="tab" aria-controls="ignoredRows" aria-selected="false">Ignored Rows</button>
-  </li>
-</ul>
+    <div class="tab-pane fade" id="v-pills-other-rows" role="tabpanel" aria-labelledby="v-pills-other-rows-tab" tabindex="0">
+      <!-- Deleted and Ignored Rows Tabs -->
+      <ul class="nav nav-tabs" id="rowsTabs" role="tablist">
+        <li class="nav-item" role="presentation" style="list-style-type: none;">
+          <button class="nav-link active" id="deleted-rows-tab" data-bs-toggle="tab" data-bs-target="#deletedRows" type="button" role="tab" aria-controls="deletedRows" aria-selected="true">Deleted Rows</button>
+        </li>
+        <li class="nav-item" role="presentation" style="list-style-type: none;">
+          <button class="nav-link" id="ignored-rows-tab" data-bs-toggle="tab" data-bs-target="#ignoredRows" type="button" role="tab" aria-controls="ignoredRows" aria-selected="false">Ignored Rows</button>
+        </li>
+      </ul>
 
-<div class="tab-content" id="myTabContent">
-  <div class="tab-pane fade show active" id="deletedRows" role="tabpanel" aria-labelledby="deleted-rows-tab">
-    <ul class="list-group">
-    {% for row in deletedRows %}
-      <li class="list-group-item list-group-item-secondary">
-        {{ row.account_name }}
-        <span class="badge bg-secondary">{{ row.currencySymbol }}: {{ row.saldo }}</span>
-        <span class="badge bg-secondary"><a href="/admin/financial/account/{{ row.account_id }}/change/">Mas</a></span>
-      </li>
-    {% endfor %}
-    </ul>
+      <div class="tab-content" id="rowsTabContent">
+        <div class="tab-pane fade show active" id="deletedRows" role="tabpanel" aria-labelledby="deleted-rows-tab">
+          <ul class="list-group">
+          {% for row in deletedRows %}
+            <li class="list-group-item list-group-item-secondary">
+              {{ row.account_name }}
+              <span class="badge bg-secondary">{{ row.currencySymbol }}: {{ row.saldo }}</span>
+              <span class="badge bg-secondary"><a href="/admin/financial/account/{{ row.account_id }}/change/">Mas</a></span>
+            </li>
+          {% endfor %}
+          </ul>
+        </div>
+        <div class="tab-pane fade" id="ignoredRows" role="tabpanel" aria-labelledby="ignored-rows-tab">
+          <ul class="list-group">
+          {% for row in ignoredRows %}
+            <li class="list-group-item list-group-item-warning">
+              {{ row.account_name }}
+              <span class="badge bg-secondary">{{ row.currencySymbol }}: {{ row.saldo }}</span>
+              <span class="badge bg-secondary"><a href="/admin/financial/account/{{ row.account_id }}/change/">Mas</a></span>
+            </li>
+          {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
   </div>
-  <div class="tab-pane fade" id="ignoredRows" role="tabpanel" aria-labelledby="ignored-rows-tab">
-    <ul class="list-group">
-    {% for row in ignoredRows %}
-      <li class="list-group-item list-group-item-warning">
-        {{ row.account_name }}
-        <span class="badge bg-secondary">{{ row.currencySymbol }}: {{ row.saldo }}</span>
-        <span class="badge bg-secondary"><a href="/admin/financial/account/{{ row.account_id }}/change/">Mas</a></span>
-      </li>
-    {% endfor %}
-    </ul>
 </div>
+
+<br />
+<br />
+<br />
 
 <script>
 function updateTheme() {
@@ -209,4 +249,3 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', upd
 </script>
 
 {% endblock %}
-

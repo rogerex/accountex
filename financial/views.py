@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from django.db import connection
 from django.shortcuts import render
 from financial.models import Currency
@@ -189,7 +189,7 @@ ORDER BY b.account_name
       if len(viewCurrencyTagGroup.tagGroups) > 0 and viewCurrencyTagGroup.total != 0:
           viewCurrencyTagGroups.append(viewCurrencyTagGroup)
 
-  context = { 'rows': patrimonyRows, 'datetime': date.today(), 'deletedRows': deletedRows, 'ignoredRows': ignoredRows, 'currencyTagGroups': currencyTagGroups, 'viewCurrencyTagGroups': viewCurrencyTagGroups }
+  context = { 'rows': patrimonyRows, 'datetime': datetime.today(), 'deletedRows': deletedRows, 'ignoredRows': ignoredRows, 'currencyTagGroups': currencyTagGroups, 'viewCurrencyTagGroups': viewCurrencyTagGroups }
 
   # pdb.set_trace()
   return render(request, 'reports/patrimony.html', context)
