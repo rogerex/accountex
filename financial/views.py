@@ -4,13 +4,14 @@ from django.shortcuts import render
 from financial.models import Currency
 
 class PatrimonyRow:
-    def __init__(self, account_id, account_name, debit, credit, saldo, currencyId):
+    def __init__(self, account_id, account_name, debit, credit, saldo, currencyId, currencySymbol):
         self.account_id = account_id
         self.account_name = account_name
         self.debit = debit
         self.credit = credit
         self.saldo = saldo
         self.currencyId = currencyId
+        self.currencySymbol = currencySymbol
 
 class CurrencyPatrimony:
     def __init__(self, currency):
@@ -36,7 +37,7 @@ def execute_patrimony_raw_sql(request):
   with connection.cursor() as cursor:
 
     cursor.execute("""
-SELECT b.account_id, b.account_name, SUM(b.debit) AS debit, SUM(b.credit) AS credit, SUM(b.debit) - SUM(b.credit) AS saldo, ac.currency_id FROM
+SELECT b.account_id, b.account_name, SUM(b.debit) AS debit, SUM(b.credit) AS credit, SUM(b.debit) - SUM(b.credit) AS saldo, ac.currency_id, c.currency_symbol FROM
 (
 SELECT a.account_id, a.account_name, SUM(seat_detail_mount) AS debit, 0 AS credit, sd.seat_id FROM account a 
 INNER JOIN seat_detail sd ON sd.account_debit_id = a.account_id
@@ -49,6 +50,7 @@ GROUP BY account_id, account_name, sd.seat_id
 INNER JOIN seat s ON s.seat_id = b.seat_id
 INNER JOIN diary_book db ON db.diary_book_id = s.diary_book_id
 INNER JOIN account ac ON ac.account_id = b.account_id
+INNER JOIN currency c ON c.currency_id = ac.currency_id
 WHERE
     ac.account_type_id IN (1, 2, 3, 9)
 GROUP BY
@@ -59,7 +61,7 @@ ORDER BY b.account_name
 
   rawRows = []
   for row in rows:
-      obj = PatrimonyRow(row[0], row[1], row[2], row[3], row[4], row[5])
+      obj = PatrimonyRow(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
       rawRows.append(obj)
 
   deletedRows = []
