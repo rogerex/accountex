@@ -125,12 +125,12 @@ function getColor() {
         <tbody>
       {% for row in rows %}
           <tr>
-            <td><a href="/admin/financial/account/{{ row.account_id }}/change/">{{ row.account_id }}</a></td>
+            <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
             <td>{{ row.account_name }}</td>
             <td>{{ row.debit }}</td>
             <td>{{ row.credit }}</td>
             <td>{{ row.currencySymbol }}</td>
-            <td>{{ row.saldo }}</td>
+            <td style="text-align: right;">{{ row.saldo }}</td>
           </tr>
       {% endfor %}
         </tbody>
@@ -174,11 +174,11 @@ function getColor() {
                     <tbody>
                     {% for row in tagGroup.rows %}
                       <tr>
-                        <td><a href="/admin/financial/account/{{ row.account_id }}/change/">{{ row.account_id }}</a></td>
+                        <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
                         <td>{{ row.account_name }}</td>
                         <td>{{ row.debit }}</td>
                         <td>{{ row.credit }}</td>
-                        <td>{{ row.saldo }}</td>
+                        <td style="text-align: right;">{{ row.saldo }}</td>
                       </tr>
                     {% endfor %}
                     </tbody>

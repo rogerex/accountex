@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from financial.models import SeatDetail, Account
-from datetime import date
+from datetime import date, datetime
 from calendar import monthrange
 from .models.shared import DataLine
 
@@ -26,8 +26,8 @@ def account_report(request, id):
         values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         for month in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]:
             days = monthrange(year, month)
-            start_date = date(year, month, 1)
-            end_date = date(year, month, days[1])
+            start_date = datetime(year, month, 1, 0, 0, 0)
+            end_date = datetime(year, month, days[1], 23, 59, 59)
             value = 0
             details = SeatDetail.objects.filter(debitAccount__id=id, seat__datetime__gte=start_date, seat__datetime__lte=end_date)
             # pdb.set_trace()
@@ -41,11 +41,11 @@ def account_report(request, id):
         debits.append(debit)
 
     for year in years:
-        values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, None]
+        values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         for month in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]:
             days = monthrange(year, month)
-            start_date = date(year, month, 1)
-            end_date = date(year, month, days[1])
+            start_date = datetime(year, month, 1, 0, 0, 0)
+            end_date = datetime(year, month, days[1], 23, 59, 59)
             value = 0
             # pdb.set_trace()
             details = SeatDetail.objects.filter(creditAccount__id=id, seat__datetime__gte=start_date, seat__datetime__lte=end_date)
@@ -60,6 +60,21 @@ def account_report(request, id):
 
     account = Account.objects.get(id=id)
 
-    context = {'accountId': id, 'accountName': account.name, 'currency': account.currency, 'debits': debits, 'credits': credits, 'years': int(yearsTotal), 'allowedYears': range(1, 15)}
+    start_date = datetime(year + 1 - int(yearsTotal), 1, 1, 0, 0, 0)
+    end_date = datetime(year, 12, 31, 23, 59, 59)
+    accountDebits = SeatDetail.objects.filter(debitAccount__id=id, seat__datetime__gte=start_date, seat__datetime__lte=end_date)
+    accountCredits = SeatDetail.objects.filter(creditAccount__id=id, seat__datetime__gte=start_date, seat__datetime__lte=end_date)
+
+    context = {
+        'accountId': id,
+        'accountName': account.name,
+        'currency': account.currency,
+        'debits': debits,
+        'credits': credits,
+        'years': int(yearsTotal),
+        'allowedYears': range(1, 15),
+        'accountDebits': accountDebits,
+        'accountCredits': accountCredits,
+    }
     return render(request, 'reports/account.html', context)
 
