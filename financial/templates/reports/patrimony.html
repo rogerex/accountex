@@ -35,13 +35,14 @@ function getColor() {
     <a class="nav-link" id="v-pills-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-accounts" type="button" role="tab" aria-controls="v-pills-accounts" aria-selected="false">Accounts</a>
     <a class="nav-link" id="v-pills-details-tab" data-bs-toggle="pill" data-bs-target="#v-pills-details" type="button" role="tab" aria-controls="v-pills-details" aria-selected="false">Details by Currency</a>
     <a class="nav-link" id="v-pills-other-rows-tab" data-bs-toggle="pill" data-bs-target="#v-pills-other-rows" type="button" role="tab" aria-controls="v-pills-other-rows" aria-selected="false">Deleted and Ignored Rows</a>
+    <a class="nav-link" id="v-pills-assets-tab" data-bs-toggle="pill" data-bs-target="#v-pills-assets" type="button" role="tab" aria-controls="v-pills-assets" aria-selected="false">Assets</a>
   </div>
   <div class="tab-content w-100" id="v-pills-tabContent">
     <div class="tab-pane fade show active" id="v-pills-charts" role="tabpanel" aria-labelledby="v-pills-charts-tab" tabindex="0">
       <!-- Charts -->
       <div class="row">
         {% for currencyTagGroup in viewCurrencyTagGroups %}
-          <div class="col-6">
+          <div class="col-4">
             <div><h1>{{ currencyTagGroup.currency.name }} <span class="badge bg-secondary">{{ currencyTagGroup.currency.symbol }}: {{ currencyTagGroup.total|floatformat:2 }}</span></h1></div>
             <div>
               <canvas id="{{currencyTagGroup.currency.id}}myChart" width="400" height="400"></canvas>
@@ -127,8 +128,8 @@ function getColor() {
           <tr>
             <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
             <td>{{ row.account_name }}</td>
-            <td>{{ row.debit }}</td>
-            <td>{{ row.credit }}</td>
+            <td style="text-align: right;">{{ row.debit }}</td>
+            <td style="text-align: right;">{{ row.credit }}</td>
             <td>{{ row.currencySymbol }}</td>
             <td style="text-align: right;">{{ row.saldo }}</td>
           </tr>
@@ -176,8 +177,8 @@ function getColor() {
                       <tr>
                         <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
                         <td>{{ row.account_name }}</td>
-                        <td>{{ row.debit }}</td>
-                        <td>{{ row.credit }}</td>
+                        <td style="text-align: right;">{{ row.debit }}</td>
+                        <td style="text-align: right;">{{ row.credit }}</td>
                         <td style="text-align: right;">{{ row.saldo }}</td>
                       </tr>
                     {% endfor %}
@@ -203,7 +204,6 @@ function getColor() {
           <button class="nav-link" id="ignored-rows-tab" data-bs-toggle="tab" data-bs-target="#ignoredRows" type="button" role="tab" aria-controls="ignoredRows" aria-selected="false">Ignored Rows</button>
         </li>
       </ul>
-
       <div class="tab-content" id="rowsTabContent">
         <div class="tab-pane fade show active" id="deletedRows" role="tabpanel" aria-labelledby="deleted-rows-tab">
           <ul class="list-group">
@@ -230,6 +230,75 @@ function getColor() {
       </div>
     </div>
 
+    <div class="tab-pane fade" id="v-pills-assets" role="tabpanel" aria-labelledby="v-pills-assets-tab" tabindex="0">
+      <div class="row">
+        {% for assetGroup in assetsGroups %}
+          <div class="col-4">
+            <div><h1>{{ assetGroup.currency.name }} <span class="badge bg-secondary">{{ assetGroup.currency.symbol }}: {{ assetGroup.total|floatformat:2 }}</span></h1></div>
+            <div>
+              <canvas id="{{assetGroup.currency.id}}myAssetsChart" width="400" height="400"></canvas>
+            </div>
+            <div><h1>{{ assetGroup.currency.symbol }} {{ assetGroup.total|floatformat:2 }}</h1></div>
+          </div>
+          <script>
+            var i = 0;
+            var assetsData = {
+              labels: [
+                {% for value in assetGroup.tagGroups %}
+                "{{ value.name }}",
+                {% endfor %}
+              ],
+              datasets: [
+                {
+                  data: [
+                    {% for value in assetGroup.tagGroups %}
+                    "{{ value.total }}",
+                    {% endfor %}
+                  ],
+                  backgroundColor: [
+                    {% for value in assetGroup.tagGroups %}
+                    getColor(),
+                    {% endfor %}
+                  ],
+                  label: "{{ assetGroup.currency.symbol }}"
+                },
+              ]
+            };
+            i = 0;
+            assetsData.datasets.push({
+              data: [
+                {% for value in assetGroup.tagGroups %}
+                "{{ value.percentage }}",
+                {% endfor %}
+              ],
+              backgroundColor: [
+                {% for value in assetGroup.tagGroups %}
+                getColor(),
+                {% endfor %}
+              ],
+              label: "%"
+            });
+            var ctx = document.getElementById("{{assetGroup.currency.id}}myAssetsChart").getContext("2d");
+
+            var pieChart = new Chart(ctx, {
+              type: 'doughnut',
+              data: assetsData,
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: 'top',
+                  },
+                  title: {
+                    display: true,
+                    text: 'Assets'
+                  },
+                }
+              },
+            });
+          </script>
+        {% endfor %}
+      </div>
   </div>
 </div>
 

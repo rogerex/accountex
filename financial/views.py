@@ -189,6 +189,47 @@ ORDER BY b.account_name
       if len(viewCurrencyTagGroup.tagGroups) > 0 and viewCurrencyTagGroup.total != 0:
           viewCurrencyTagGroups.append(viewCurrencyTagGroup)
 
+  assetsTags = [
+      {
+          'name': 'Cryptos',
+          'prefixs': ['Inversiones - Crypto', 'Z - Inversiones - Crypto'],
+          'currencyId': 2,
+      },
+      {
+          'name': 'IBKR',
+          'prefixs': ['Inversiones - Broker: IB', 'Z - Inversiones - Broker: IB'],
+          'currencyId': 2,
+      },
+      {
+          'name': 'Hapi',
+          'prefixs': ['Inversiones - Broker: Hapi', 'Z - Inversiones - Broker: Hapi'],
+          'currencyId': 2,
+      },
+  ]
+
+  currencyAssetsGroups = []
+  for dataCurrency in dataCurrencies:
+      currencyTagGroup = CurrencyTagGroups(dataCurrency.currency)
+      for tagGroup in assetsTags:
+          tg = TagGroup(tagGroup['name'], tagGroup['prefixs'])
+          for row in dataCurrency.rows:
+              for prefix in tagGroup['prefixs']:
+                  if row.account_name.startswith(prefix):
+                      tg.rows.append(row)
+                      tg.total += row.saldo
+                      break
+
+          currencyTagGroup.tagGroups.append(tg)
+          currencyTagGroup.total += tg.total
+
+      if currencyTagGroup.total != 0 and len(currencyTagGroup.tagGroups) > 0:
+          currencyAssetsGroups.append(currencyTagGroup)
+
+  for currencyAssetsGroup in currencyAssetsGroups:
+      for tagGroup in currencyAssetsGroup.tagGroups:
+          if currencyAssetsGroup.total != 0:
+              tagGroup.percentage = tagGroup.total / currencyAssetsGroup.total * 100
+
   context = {
       'rows': patrimonyRows,
       'datetime': datetime.today(),
@@ -196,6 +237,7 @@ ORDER BY b.account_name
       'ignoredRows': ignoredRows,
       'currencyTagGroups': currencyTagGroups,
       'viewCurrencyTagGroups': viewCurrencyTagGroups,
+      'assetsGroups': currencyAssetsGroups,
   }
 
   # pdb.set_trace()
