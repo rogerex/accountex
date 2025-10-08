@@ -31,14 +31,14 @@ function getColor() {
 
 <div class="d-flex align-items-start">
   <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-    <a class="nav-link active" id="v-pills-charts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-charts"  role="tab" aria-controls="v-pills-charts" aria-selected="true">Charts</a>
-    <a class="nav-link" id="v-pills-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-accounts" type="button" role="tab" aria-controls="v-pills-accounts" aria-selected="false">Accounts</a>
-    <a class="nav-link" id="v-pills-details-tab" data-bs-toggle="pill" data-bs-target="#v-pills-details" type="button" role="tab" aria-controls="v-pills-details" aria-selected="false">Details by Currency</a>
-    <a class="nav-link" id="v-pills-other-rows-tab" data-bs-toggle="pill" data-bs-target="#v-pills-other-rows" type="button" role="tab" aria-controls="v-pills-other-rows" aria-selected="false">Deleted and Ignored Rows</a>
-    <a class="nav-link" id="v-pills-assets-tab" data-bs-toggle="pill" data-bs-target="#v-pills-assets" type="button" role="tab" aria-controls="v-pills-assets" aria-selected="false">Assets</a>
+    <a class="nav-link {% if activeTab == 1 %}active{% endif %}" id="v-pills-charts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-charts" role="tab" aria-controls="v-pills-charts" aria-selected="true" href="{% url 'patrimony_report' %}">Charts</a>
+    <a class="nav-link {% if activeTab == 2 %}active{% endif %}" id="v-pills-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-accounts" role="tab" aria-controls="v-pills-accounts" aria-selected="false" href="{% url 'patrimony_report' %}?tab=2">Accounts</a>
+    <a class="nav-link {% if activeTab == 3 %}active{% endif %}" id="v-pills-details-tab" data-bs-toggle="pill" data-bs-target="#v-pills-details" role="tab" aria-controls="v-pills-details" aria-selected="false" href="{% url 'patrimony_report' %}?tab=3">Details by Currency</a>
+    <a class="nav-link {% if activeTab == 4 %}active{% endif %}" id="v-pills-other-rows-tab" data-bs-toggle="pill" data-bs-target="#v-pills-other-rows" role="tab" aria-controls="v-pills-other-rows" aria-selected="false" href="{% url 'patrimony_report' %}?tab=4">Deleted and Ignored Rows</a>
+    <a class="nav-link {% if activeTab == 5 %}active{% endif %}" id="v-pills-assets-tab" data-bs-toggle="pill" data-bs-target="#v-pills-assets" role="tab" aria-controls="v-pills-assets" aria-selected="false" href="{% url 'patrimony_report' %}?tab=5">Assets</a>
   </div>
   <div class="tab-content w-100" id="v-pills-tabContent">
-    <div class="tab-pane fade show active" id="v-pills-charts" role="tabpanel" aria-labelledby="v-pills-charts-tab" tabindex="0">
+    <div class="tab-pane fade {% if activeTab == 1 %}show active{% endif %}" id="v-pills-charts" role="tabpanel" aria-labelledby="v-pills-charts-tab" tabindex="0">
       <!-- Charts -->
       <div class="row">
         {% for currencyTagGroup in viewCurrencyTagGroups %}
@@ -110,7 +110,7 @@ function getColor() {
       </div>
     </div>
 
-    <div class="tab-pane fade" id="v-pills-accounts" role="tabpanel" aria-labelledby="v-pills-accounts-tab" tabindex="0">
+    <div class="tab-pane fade {% if activeTab == 2 %}show active{% endif %}" id="v-pills-accounts" role="tabpanel" aria-labelledby="v-pills-accounts-tab" tabindex="0">
       <!-- Table (Account details) -->
       <table>
         <thead>
@@ -138,7 +138,7 @@ function getColor() {
       </table>
     </div>
 
-    <div class="tab-pane fade" id="v-pills-details" role="tabpanel" aria-labelledby="v-pills-details-tab" tabindex="0">
+    <div class="tab-pane fade {% if activeTab == 3 %}show active{% endif %}" id="v-pills-details" role="tabpanel" aria-labelledby="v-pills-details-tab" tabindex="0">
       <!-- Account details by Currency -->
       <ul class="nav nav-tabs" id="detailsTabs" role="tablist">
         {% for currencyTagGroup in currencyTagGroups %}
@@ -194,7 +194,7 @@ function getColor() {
       </div>
     </div>
 
-    <div class="tab-pane fade" id="v-pills-other-rows" role="tabpanel" aria-labelledby="v-pills-other-rows-tab" tabindex="0">
+    <div class="tab-pane fade {% if activeTab == 4 %}show active{% endif %}" id="v-pills-other-rows" role="tabpanel" aria-labelledby="v-pills-other-rows-tab" tabindex="0">
       <!-- Deleted and Ignored Rows Tabs -->
       <ul class="nav nav-tabs" id="rowsTabs" role="tablist">
         <li class="nav-item" role="presentation" style="list-style-type: none;">
@@ -230,7 +230,7 @@ function getColor() {
       </div>
     </div>
 
-    <div class="tab-pane fade" id="v-pills-assets" role="tabpanel" aria-labelledby="v-pills-assets-tab" tabindex="0">
+    <div class="tab-pane fade {% if activeTab == 5 %}show active{% endif %}" id="v-pills-assets" role="tabpanel" aria-labelledby="v-pills-assets-tab" tabindex="0">
       <div class="row">
         {% for assetGroup in assetsGroups %}
           <div class="col-4">

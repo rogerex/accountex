@@ -33,7 +33,7 @@ class CurrencyTagGroups:
         self.total = 0
 
 def execute_patrimony_raw_sql(request):
-
+  activeTab = request.GET.get('tab', 1)
   with connection.cursor() as cursor:
 
     cursor.execute("""
@@ -238,6 +238,7 @@ ORDER BY b.account_name
       'currencyTagGroups': currencyTagGroups,
       'viewCurrencyTagGroups': viewCurrencyTagGroups,
       'assetsGroups': currencyAssetsGroups,
+      'activeTab': int(activeTab),
   }
 
   # pdb.set_trace()
