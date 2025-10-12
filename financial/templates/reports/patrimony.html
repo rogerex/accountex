@@ -298,6 +298,28 @@ function getColor() {
             });
           </script>
         {% endfor %}
+          <div class="col-6">
+            <table>
+              <thead>
+                <tr>
+                  <th>Account Id</th>
+                  <th class="sortable">Account Name</th>
+                  <th class="sortable">Currency</th>
+                  <th class="sortable">Saldo</th>
+                </tr>
+              </thead>
+              <tbody>
+            {% for row in assetRows %}
+                <tr>
+                  <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
+                  <td>{{ row.account_name }}</td>
+                  <td>{{ row.currencySymbol }}</td>
+                  <td style="text-align: right;">{{ row.saldo }}</td>
+                </tr>
+            {% endfor %}
+              </tbody>
+            </table>
+          </div>
       </div>
   </div>
 </div>
