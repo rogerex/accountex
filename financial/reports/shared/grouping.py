@@ -53,7 +53,7 @@ def build_groups(rawRows, tagGroups):
       viewCurrencyTagGroup = CurrencyTagGroups(currencyTagGroup.currency)
 
       for tagGroup in currencyTagGroup.tagGroups:
-          tagGroup.percentage = tagGroup.total / currencyTagGroup.total * 100
+          tagGroup.percentage = tagGroup.total / currencyTagGroup.total * 100 if currencyTagGroup.total != 0 else 1
           if len(tagGroup.rows) > 0 and tagGroup.total != 0:
               viewCurrencyTagGroup.tagGroups.append(tagGroup)
               viewCurrencyTagGroup.total += tagGroup.total

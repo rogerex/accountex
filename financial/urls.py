@@ -1,5 +1,6 @@
 from django.urls import re_path
 from financial import views
+from financial.reports.flows import execute_flows_raw_sql
 from .reports.accountType import account_type_report
 from .reports.seat import seat_report
 from .reports.account import account_report
@@ -14,5 +15,6 @@ urlpatterns = [
     # ex: /account-type/5/report/
     re_path(r'^financial/account-type/(?P<id>\d+)/report/$', account_type_report, name='account_type_report'),
     re_path(r'^financial/patrimony/$', execute_patrimony_raw_sql, name='patrimony_report'),
+    re_path(r'^financial/flows/$', execute_flows_raw_sql, name='flows_report'),
     re_path(r'^financial/dashboard/performance/$', performance_widget, name='performance_widget'),
 ]
