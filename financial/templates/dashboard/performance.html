@@ -1,0 +1,204 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block branding %}<h1 id="site-name">Performance</h1>{% endblock %}
+{% block extrahead %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">Home</a>
+&rsaquo; <a href="../../financial/">Financial</a>
+&rsaquo; Performance
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Performance at: <span class="badge bg-secondary">{{ datetime }}</span></h1>
+<br />
+
+<script>
+var colors = ["#46BFBD", "#F7464A", "#FDB45C", "#949FB1", "#4D5360", "#FF5A5E", "#5AD3D1", "#FFC870", "#A8B3C5", "#616774"]
+var i = 0;
+
+function getColor() {
+  i++;
+  return colors[(i-1)%colors.length];
+}
+</script>
+
+<div class="row">
+  <div class="col">
+    <div>
+      <canvas id="myChart1" width="800" height="400"></canvas>
+    </div>
+  </div>
+  <br />
+  <br />
+  <div class="col">
+    <div>
+      <canvas id="myChart2" width="800" height="400"></canvas>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+var data1 = {
+    labels: [
+      {% for label in labels %}
+        "{{ label }}",
+      {% endfor %}
+    ],
+    datasets: [
+      {% for debit in debitLines %}
+        {
+          label: "{{ debit.label }}",
+          fillColor: "rgba(220,220,220,0.2)",
+          strokeColor: "rgba(220,220,220,1)",
+          pointColor: "rgba(220,220,220,1)",
+          pointStrokeColor: "#fff",
+          pointHighlightFill: "#fff",
+          pointHighlightStroke: "rgba(220,220,220,1)",
+          data: [
+          {% for value in debit.values %}
+          {{ value }},
+          {% endfor %}
+          ]
+        },
+      {% endfor %}
+    ]
+};
+
+var data2 = {
+    labels: [
+      {% for label in labels %}
+        "{{ label }}",
+      {% endfor %}
+    ],
+    datasets: [
+        {% for credit in creditLines %}
+          {
+            label: "{{ credit.label }}",
+            fillColor: "rgba(220,220,220,0.2)",
+            strokeColor: "rgba(220,220,220,1)",
+            pointColor: "rgba(220,220,220,1)",
+            pointStrokeColor: "#fff",
+            pointHighlightFill: "#fff",
+            pointHighlightStroke: "rgba(220,220,220,1)",
+            data: [
+            {% for value in credit.values %}
+            {{ value }},
+            {% endfor %}
+            ]
+          },
+        {% endfor %}
+    ]
+};
+
+var ctx = [];
+ctx.push(document.getElementById("myChart1").getContext("2d"));
+ctx.push(document.getElementById("myChart2").getContext("2d"));
+
+var debitLineChart = new Chart(ctx[0], {
+  type: 'line',
+  data: data1,
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Debit Movements'
+      }
+    }
+  },
+});
+var creditLineChart = new Chart(ctx[1], {
+  type: 'line',
+  data: data2,
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Credit Movements'
+      }
+    }
+  },
+});
+
+</script>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="#">Navbar</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <div class="navbar-nav">
+      <div class="nav-item active">
+        <a class="nav-link" href="?presetMode=1">1D {% if presetMode == 1 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=2">1W {% if presetMode == 2 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=3">MTD {% if presetMode == 3 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=4">1M {% if presetMode == 4 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=5">3M {% if presetMode == 5 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=6">6M {% if presetMode == 6 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=7">YTD {% if presetMode == 7 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=8">1Y {% if presetMode == 8 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=9">2Y {% if presetMode == 9 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=10">3Y {% if presetMode == 10 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=11">5Y {% if presetMode == 11 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=12">10Y {% if presetMode == 12 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="?presetMode=13">All {% if presetMode == 13 %}<span class="sr-only">(current)</span>{% endif %}</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+function updateTheme() {
+  const colorMode = window.matchMedia("(prefers-color-scheme: dark)").matches ?
+    "dark" :
+    "light";
+  document.querySelector("html").setAttribute("data-bs-theme", colorMode);
+}
+
+// Set theme on load
+updateTheme()
+
+// Update theme when the preferred scheme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme)
+</script>
+
+{% endblock %}
