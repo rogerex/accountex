@@ -2,38 +2,13 @@ from datetime import datetime
 from django.db import connection
 from django.shortcuts import render
 from financial.models import Currency
+from financial.reports.patrimoning.models import CurrencyPatrimony, PatrimonyRow, CurrencyTagGroups, TagGroup
+from financial.reports.patrimoning.assets import calculate_assets
 
-class PatrimonyRow:
-    def __init__(self, account_id, account_name, debit, credit, saldo, currencyId, currencySymbol):
-        self.account_id = account_id
-        self.account_name = account_name
-        self.debit = debit
-        self.credit = credit
-        self.saldo = saldo
-        self.currencyId = currencyId
-        self.currencySymbol = currencySymbol
-
-class CurrencyPatrimony:
-    def __init__(self, currency):
-        self.currency = currency
-        self.rows = []
-
-class TagGroup:
-    def __init__(self, name, prefixs):
-        self.name = name
-        self.prefixs = prefixs
-        self.rows = []
-        self.total = 0
-        self.percentage = 0
-
-class CurrencyTagGroups:
-    def __init__(self, currency):
-        self.currency = currency
-        self.tagGroups = []
-        self.total = 0
 
 def execute_patrimony_raw_sql(request):
   activeTab = request.GET.get('tab', 1)
+
   with connection.cursor() as cursor:
 
     cursor.execute("""
@@ -82,7 +57,66 @@ ORDER BY b.account_name
 
       dataCurrencies.append(dataCurrency)
 
-  tagGroups = [
+  tagGroups = __tag_accounts()
+
+  currencyTagGroups = []
+  rowsInTagGroups = []
+  for dataCurrency in dataCurrencies:
+      currencyTagGroup = CurrencyTagGroups(dataCurrency.currency)
+      for tagGroup in tagGroups:
+          tg = TagGroup(tagGroup['name'], tagGroup['prefixs'])
+          for row in dataCurrency.rows:
+              for prefix in tagGroup['prefixs']:
+                  if row.account_name.startswith(prefix):
+                      tg.rows.append(row)
+                      rowsInTagGroups.append(row)
+                      tg.total += row.saldo
+                      break
+
+          currencyTagGroup.tagGroups.append(tg)
+          currencyTagGroup.total += tg.total
+      currencyTagGroups.append(currencyTagGroup)
+
+  ignoredRows = []
+  for row in patrimonyRows:
+      if row not in rowsInTagGroups:
+          ignoredRows.append(row)
+
+  viewCurrencyTagGroups = []
+  for currencyTagGroup in currencyTagGroups:
+      viewCurrencyTagGroup = CurrencyTagGroups(currencyTagGroup.currency)
+
+      for tagGroup in currencyTagGroup.tagGroups:
+          tagGroup.percentage = tagGroup.total / currencyTagGroup.total * 100
+          if len(tagGroup.rows) > 0 and tagGroup.total != 0:
+              viewCurrencyTagGroup.tagGroups.append(tagGroup)
+              viewCurrencyTagGroup.total += tagGroup.total
+
+      if len(viewCurrencyTagGroup.tagGroups) > 0 and viewCurrencyTagGroup.total != 0:
+          viewCurrencyTagGroups.append(viewCurrencyTagGroup)
+
+  # Assets Groups
+  currencyAssetsGroups, assetRows = calculate_assets(dataCurrencies)
+
+  context = {
+      'rows': patrimonyRows,
+      'deletedRows': deletedRows,
+      'ignoredRows': ignoredRows,
+
+      'currencyTagGroups': currencyTagGroups,
+      'viewCurrencyTagGroups': viewCurrencyTagGroups,
+      'assetsGroups': currencyAssetsGroups,
+      'assetRows': sorted(assetRows, key=lambda p: p.account_name),
+
+      'datetime': datetime.today(),
+      'activeTab': int(activeTab),
+  }
+
+  # pdb.set_trace()
+  return render(request, 'reports/patrimony.html', context)
+
+def __tag_accounts():
+  return [
       {
           'name': 'Artefactos',
           'prefixs': ['Artefactos', 'Z - Depreciacion Acumulada de Artefactos'],
@@ -152,98 +186,3 @@ ORDER BY b.account_name
           'prefixs': ['Zapatillas', 'Z - Depreciacion Acumulada de Zapatillas'],
       },
   ]
-
-  currencyTagGroups = []
-  rowsInTagGroups = []
-  for dataCurrency in dataCurrencies:
-      currencyTagGroup = CurrencyTagGroups(dataCurrency.currency)
-      for tagGroup in tagGroups:
-          tg = TagGroup(tagGroup['name'], tagGroup['prefixs'])
-          for row in dataCurrency.rows:
-              for prefix in tagGroup['prefixs']:
-                  if row.account_name.startswith(prefix):
-                      tg.rows.append(row)
-                      rowsInTagGroups.append(row)
-                      tg.total += row.saldo
-                      break
-
-          currencyTagGroup.tagGroups.append(tg)
-          currencyTagGroup.total += tg.total
-      currencyTagGroups.append(currencyTagGroup)
-
-  ignoredRows = []
-  for row in patrimonyRows:
-      if row not in rowsInTagGroups:
-          ignoredRows.append(row)
-
-  viewCurrencyTagGroups = []
-  for currencyTagGroup in currencyTagGroups:
-      viewCurrencyTagGroup = CurrencyTagGroups(currencyTagGroup.currency)
-
-      for tagGroup in currencyTagGroup.tagGroups:
-          tagGroup.percentage = tagGroup.total / currencyTagGroup.total * 100
-          if len(tagGroup.rows) > 0 and tagGroup.total != 0:
-              viewCurrencyTagGroup.tagGroups.append(tagGroup)
-              viewCurrencyTagGroup.total += tagGroup.total
-
-      if len(viewCurrencyTagGroup.tagGroups) > 0 and viewCurrencyTagGroup.total != 0:
-          viewCurrencyTagGroups.append(viewCurrencyTagGroup)
-
-# Assets Groups
-  assetsTags = [
-      {
-          'name': 'Cryptos',
-          'prefixs': ['Inversiones - Crypto', 'Z - Inversiones - Crypto'],
-          'currencyId': 2,
-      },
-      {
-          'name': 'IBKR',
-          'prefixs': ['Inversiones - Broker: IB', 'Z - Inversiones - Broker: IB'],
-          'currencyId': 2,
-      },
-      {
-          'name': 'Hapi',
-          'prefixs': ['Inversiones - Broker: Hapi', 'Z - Inversiones - Broker: Hapi'],
-          'currencyId': 2,
-      },
-  ]
-
-  assetRows = []
-  currencyAssetsGroups = []
-  for dataCurrency in dataCurrencies:
-      currencyTagGroup = CurrencyTagGroups(dataCurrency.currency)
-      for tagGroup in assetsTags:
-          tg = TagGroup(tagGroup['name'], tagGroup['prefixs'])
-          for row in dataCurrency.rows:
-              for prefix in tagGroup['prefixs']:
-                  if row.account_name.startswith(prefix):
-                      tg.rows.append(row)
-                      tg.total += row.saldo
-                      assetRows.append(row)
-                      break
-
-          currencyTagGroup.tagGroups.append(tg)
-          currencyTagGroup.total += tg.total
-
-      if currencyTagGroup.total != 0 and len(currencyTagGroup.tagGroups) > 0:
-          currencyAssetsGroups.append(currencyTagGroup)
-
-  for currencyAssetsGroup in currencyAssetsGroups:
-      for tagGroup in currencyAssetsGroup.tagGroups:
-          if currencyAssetsGroup.total != 0:
-              tagGroup.percentage = tagGroup.total / currencyAssetsGroup.total * 100
-
-  context = {
-      'rows': patrimonyRows,
-      'datetime': datetime.today(),
-      'deletedRows': deletedRows,
-      'ignoredRows': ignoredRows,
-      'currencyTagGroups': currencyTagGroups,
-      'viewCurrencyTagGroups': viewCurrencyTagGroups,
-      'assetsGroups': currencyAssetsGroups,
-      'assetRows': sorted(assetRows, key=lambda p: p.account_name),
-      'activeTab': int(activeTab),
-  }
-
-  # pdb.set_trace()
-  return render(request, 'reports/patrimony.html', context)

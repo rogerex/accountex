@@ -298,7 +298,7 @@ function getColor() {
             });
           </script>
         {% endfor %}
-          <div class="col-6">
+          <div class="col-8">
             <table>
               <thead>
                 <tr>
@@ -306,6 +306,13 @@ function getColor() {
                   <th class="sortable">Account Name</th>
                   <th class="sortable">Currency</th>
                   <th class="sortable">Saldo</th>
+                  <th class="sortable">Today</th>
+                  <th class="sortable">YTD</th>
+                  <th class="sortable">MTD</th>
+                  <th class="sortable">LY</th>
+                  <th class="sortable">L6M</th>
+                  <th class="sortable">L3M</th>
+                  <th class="sortable">LM</th>
                 </tr>
               </thead>
               <tbody>
@@ -315,6 +322,13 @@ function getColor() {
                   <td>{{ row.account_name }}</td>
                   <td>{{ row.currencySymbol }}</td>
                   <td style="text-align: right;">{{ row.saldo }}</td>
+                  <td style="text-align: right;">{{ row.total_today }}</td>
+                  <td style="text-align: right;">{{ row.total_ytd }}</td>
+                  <td style="text-align: right;">{{ row.total_mtd }}</td>
+                  <td style="text-align: right;">{{ row.total_last_365_days }}</td>
+                  <td style="text-align: right;">{{ row.total_last_6_months }}</td>
+                  <td style="text-align: right;">{{ row.total_last_3_months }}</td>
+                  <td style="text-align: right;">{{ row.total_last_30_days }}</td>
                 </tr>
             {% endfor %}
               </tbody>
