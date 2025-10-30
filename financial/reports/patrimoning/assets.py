@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from financial.models import SeatDetail
 from django.db.models import Sum
-from financial.reports.patrimoning.models import AssetRow, CurrencyTagGroups, TagGroup
+from financial.reports.patrimoning.models import AssetRow
+from financial.reports.models.shared import CurrencyTagGroups, TagGroup
 
 def __tag_assets():
   return [

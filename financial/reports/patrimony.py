@@ -1,14 +1,38 @@
 from datetime import datetime
 from django.db import connection
 from django.shortcuts import render
-from financial.models import Currency
-from financial.reports.patrimoning.models import CurrencyPatrimony, PatrimonyRow, CurrencyTagGroups, TagGroup
 from financial.reports.patrimoning.assets import calculate_assets
-
+from financial.reports.shared.grouping import build_groups
 
 def execute_patrimony_raw_sql(request):
   activeTab = request.GET.get('tab', 1)
 
+  rawRows = __execute_raw_sql()
+  tagGroups = __tag_accounts()
+
+  filteredRows, deletedRows, ignoredRows, currencyTagGroups, viewCurrencyTagGroups, dataCurrencies = build_groups(rawRows, tagGroups)
+
+  # Assets Groups
+  currencyAssetsGroups, assetRows = calculate_assets(dataCurrencies)
+
+  context = {
+      'rows': filteredRows,
+      'deletedRows': deletedRows,
+      'ignoredRows': ignoredRows,
+
+      'currencyTagGroups': currencyTagGroups,
+      'viewCurrencyTagGroups': viewCurrencyTagGroups,
+      'assetsGroups': currencyAssetsGroups,
+      'assetRows': sorted(assetRows, key=lambda p: p.account_name),
+
+      'datetime': datetime.today(),
+      'activeTab': int(activeTab),
+  }
+
+  # pdb.set_trace()
+  return render(request, 'reports/patrimony.html', context)
+
+def __execute_raw_sql():
   with connection.cursor() as cursor:
 
     cursor.execute("""
@@ -33,87 +57,7 @@ GROUP BY
 ORDER BY b.account_name
                    """)
     rows = cursor.fetchall()
-
-  rawRows = []
-  for row in rows:
-      obj = PatrimonyRow(row[0], row[1], row[2], row[3], row[4], row[5], row[6])
-      rawRows.append(obj)
-
-  deletedRows = []
-  patrimonyRows = []
-  for row in rawRows:
-      if row.account_name.startswith('ZZ -') and row.saldo == 0:
-          deletedRows.append(row)
-      else:
-          patrimonyRows.append(row)
-
-  dataCurrencies = []
-  currencies = Currency.objects.all()
-  for currency in currencies:
-      dataCurrency = CurrencyPatrimony(currency)
-      for row in patrimonyRows:
-          if row.currencyId == currency.id:
-              dataCurrency.rows.append(row)
-
-      dataCurrencies.append(dataCurrency)
-
-  tagGroups = __tag_accounts()
-
-  currencyTagGroups = []
-  rowsInTagGroups = []
-  for dataCurrency in dataCurrencies:
-      currencyTagGroup = CurrencyTagGroups(dataCurrency.currency)
-      for tagGroup in tagGroups:
-          tg = TagGroup(tagGroup['name'], tagGroup['prefixs'])
-          for row in dataCurrency.rows:
-              for prefix in tagGroup['prefixs']:
-                  if row.account_name.startswith(prefix):
-                      tg.rows.append(row)
-                      rowsInTagGroups.append(row)
-                      tg.total += row.saldo
-                      break
-
-          currencyTagGroup.tagGroups.append(tg)
-          currencyTagGroup.total += tg.total
-      currencyTagGroups.append(currencyTagGroup)
-
-  ignoredRows = []
-  for row in patrimonyRows:
-      if row not in rowsInTagGroups:
-          ignoredRows.append(row)
-
-  viewCurrencyTagGroups = []
-  for currencyTagGroup in currencyTagGroups:
-      viewCurrencyTagGroup = CurrencyTagGroups(currencyTagGroup.currency)
-
-      for tagGroup in currencyTagGroup.tagGroups:
-          tagGroup.percentage = tagGroup.total / currencyTagGroup.total * 100
-          if len(tagGroup.rows) > 0 and tagGroup.total != 0:
-              viewCurrencyTagGroup.tagGroups.append(tagGroup)
-              viewCurrencyTagGroup.total += tagGroup.total
-
-      if len(viewCurrencyTagGroup.tagGroups) > 0 and viewCurrencyTagGroup.total != 0:
-          viewCurrencyTagGroups.append(viewCurrencyTagGroup)
-
-  # Assets Groups
-  currencyAssetsGroups, assetRows = calculate_assets(dataCurrencies)
-
-  context = {
-      'rows': patrimonyRows,
-      'deletedRows': deletedRows,
-      'ignoredRows': ignoredRows,
-
-      'currencyTagGroups': currencyTagGroups,
-      'viewCurrencyTagGroups': viewCurrencyTagGroups,
-      'assetsGroups': currencyAssetsGroups,
-      'assetRows': sorted(assetRows, key=lambda p: p.account_name),
-
-      'datetime': datetime.today(),
-      'activeTab': int(activeTab),
-  }
-
-  # pdb.set_trace()
-  return render(request, 'reports/patrimony.html', context)
+    return rows
 
 def __tag_accounts():
   return [
