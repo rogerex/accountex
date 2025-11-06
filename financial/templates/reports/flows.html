@@ -42,13 +42,14 @@ function getColor() {
 <div class="d-flex align-items-start">
   <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
     <a class="nav-link {% if activeTab == 1 %}active{% endif %}" id="v-pills-charts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-charts" role="tab" aria-controls="v-pills-charts" aria-selected="true" href="{% url 'patrimony_report' %}">Charts</a>
-    <a class="nav-link {% if activeTab == 2 %}active{% endif %}" id="v-pills-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-accounts" role="tab" aria-controls="v-pills-accounts" aria-selected="false" href="{% url 'patrimony_report' %}?tab=2">Outs</a>
+    <a class="nav-link {% if activeTab == 2 %}active{% endif %}" id="v-pills-out-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-out-accounts" role="tab" aria-controls="v-pills-out-accounts" aria-selected="false" href="{% url 'patrimony_report' %}?tab=2">Outs</a>
     <a class="nav-link {% if activeTab == 3 %}active{% endif %}" id="v-pills-details-tab" data-bs-toggle="pill" data-bs-target="#v-pills-details" role="tab" aria-controls="v-pills-details" aria-selected="false" href="{% url 'patrimony_report' %}?tab=3">Details by Currency</a>
     <a class="nav-link {% if activeTab == 4 %}active{% endif %}" id="v-pills-other-rows-tab" data-bs-toggle="pill" data-bs-target="#v-pills-other-rows" role="tab" aria-controls="v-pills-other-rows" aria-selected="false" href="{% url 'patrimony_report' %}?tab=4">Deleted and Ignored Rows</a>
+    <a class="nav-link {% if activeTab == 5 %}active{% endif %}" id="v-pills-in-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-in-accounts" role="tab" aria-controls="v-pills-in-accounts" aria-selected="false" href="{% url 'patrimony_report' %}?tab=5">Ins</a>
   </div>
   <div class="tab-content w-100" id="v-pills-tabContent">
     <div class="tab-pane fade {% if activeTab == 1 %}show active{% endif %}" id="v-pills-charts" role="tabpanel" aria-labelledby="v-pills-charts-tab" tabindex="0">
-      <!-- Charts -->
+      <!-- Charts for out rows-->
       <div class="row">
         {% for currencyTagGroup in viewCurrencyTagGroups %}
           <div class="col-4">
@@ -119,8 +120,8 @@ function getColor() {
       </div>
     </div>
 
-    <div class="tab-pane fade {% if activeTab == 2 %}show active{% endif %}" id="v-pills-accounts" role="tabpanel" aria-labelledby="v-pills-accounts-tab" tabindex="0">
-      <!-- Table (Account details) -->
+    <div class="tab-pane fade {% if activeTab == 2 %}show active{% endif %}" id="v-pills-out-accounts" role="tabpanel" aria-labelledby="v-pills-out-accounts-tab" tabindex="0">
+      <!-- Table (Out Account details) -->
       <table>
         <thead>
           <tr>
@@ -133,7 +134,7 @@ function getColor() {
           </tr>
         </thead>
         <tbody>
-      {% for row in rows %}
+      {% for row in outRows %}
           <tr>
             <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
             <td>{{ row.account_name }}</td>
@@ -204,7 +205,7 @@ function getColor() {
     </div>
 
     <div class="tab-pane fade {% if activeTab == 4 %}show active{% endif %}" id="v-pills-other-rows" role="tabpanel" aria-labelledby="v-pills-other-rows-tab" tabindex="0">
-      <!-- Deleted and Ignored Rows Tabs -->
+      <!-- Deleted and Ignored Out Rows Tabs -->
       <ul class="nav nav-tabs" id="rowsTabs" role="tablist">
         <li class="nav-item" role="presentation" style="list-style-type: none;">
           <button class="nav-link active" id="deleted-rows-tab" data-bs-toggle="tab" data-bs-target="#deletedRows" type="button" role="tab" aria-controls="deletedRows" aria-selected="true">Deleted Rows</button>
@@ -216,7 +217,7 @@ function getColor() {
       <div class="tab-content" id="rowsTabContent">
         <div class="tab-pane fade show active" id="deletedRows" role="tabpanel" aria-labelledby="deleted-rows-tab">
           <ul class="list-group">
-          {% for row in deletedRows %}
+          {% for row in deletedOutRows %}
             <li class="list-group-item list-group-item-secondary">
               {{ row.account_name }}
               <span class="badge bg-secondary">{{ row.currencySymbol }}: {{ row.saldo }}</span>
@@ -227,7 +228,7 @@ function getColor() {
         </div>
         <div class="tab-pane fade" id="ignoredRows" role="tabpanel" aria-labelledby="ignored-rows-tab">
           <ul class="list-group">
-          {% for row in ignoredRows %}
+          {% for row in ignoredOutRows %}
             <li class="list-group-item list-group-item-warning">
               {{ row.account_name }}
               <span class="badge bg-secondary">{{ row.currencySymbol }}: {{ row.saldo }}</span>
@@ -237,6 +238,34 @@ function getColor() {
           </ul>
         </div>
       </div>
+    </div>
+
+    <div class="tab-pane fade {% if activeTab == 5 %}show active{% endif %}" id="v-pills-in-accounts" role="tabpanel" aria-labelledby="v-pills-in-accounts-tab" tabindex="0">
+      <!-- Table (In Account details) -->
+      <table>
+        <thead>
+          <tr>
+            <th>Account Id</th>
+            <th class="sortable">Account Name</th>
+            <th class="sortable">Debit</th>
+            <th class="sortable">Credit</th>
+            <th class="sortable">Currency</th>
+            <th class="sortable">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+      {% for row in inRows %}
+          <tr>
+            <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
+            <td>{{ row.account_name }}</td>
+            <td style="text-align: right;">{{ row.debit }}</td>
+            <td style="text-align: right;">{{ row.credit }}</td>
+            <td>{{ row.currencySymbol }}</td>
+            <td style="text-align: right;">{{ row.saldo }}</td>
+          </tr>
+      {% endfor %}
+        </tbody>
+      </table>
     </div>
 
   </div>

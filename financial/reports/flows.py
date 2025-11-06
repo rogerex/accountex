@@ -1,24 +1,33 @@
 from datetime import datetime
 from django.db import connection
 from django.shortcuts import render
+from financial.reports.models.shared import AccountRow
 from financial.reports.shared.grouping import build_groups
 
 def execute_flows_raw_sql(request):
   activeTab = request.GET.get('tab', 2)
   activeYear = request.GET.get('year', datetime.today().year)
 
-  rawRows = __execute_raw_sql(activeYear)
+  rawOutRows = __execute_out_raw_sql(activeYear)
   tagGroups = __tag_accounts()
 
-  filteredRows, deletedRows, ignoredRows, currencyTagGroups, viewCurrencyTagGroups, dataCurrencies = build_groups(rawRows, tagGroups)
+  filteredOutRows, deletedOutRows, ignoredOutRows, currencyTagGroups, viewCurrencyTagGroups, dataCurrencies = build_groups(rawOutRows, tagGroups)
+
+  rawInRows = __execute_in_raw_sql(activeYear)
+  inRows = []
+  for rawRow in rawInRows:
+      obj = AccountRow(rawRow[0], rawRow[1], rawRow[2], rawRow[3], rawRow[4], rawRow[5], rawRow[6])
+      inRows.append(obj)
 
   context = {
-    'rows': filteredRows,
-    'deletedRows': deletedRows,
-    'ignoredRows': ignoredRows,
+    'outRows': filteredOutRows,
+    'deletedOutRows': deletedOutRows,
+    'ignoredOutRows': ignoredOutRows,
 
     'currencyTagGroups': currencyTagGroups,
     'viewCurrencyTagGroups': viewCurrencyTagGroups,
+
+    'inRows': inRows,
 
     'datetime': datetime.today(),
     'activeTab': int(activeTab),
@@ -28,7 +37,7 @@ def execute_flows_raw_sql(request):
 
   return render(request, 'reports/flows.html', context)
 
-def __execute_raw_sql(selectedYear):
+def __execute_out_raw_sql(selectedYear):
   with connection.cursor() as cursor:
 
     cursor.execute("""
@@ -117,3 +126,33 @@ def __tag_accounts():
       'prefixs': ['Xitas', 'ZZ - Deprecated - Xitas:'],
     },
   ]
+
+def __execute_in_raw_sql(selectedYear):
+  with connection.cursor() as cursor:
+
+    cursor.execute("""
+SELECT b.account_id, b.account_name, SUM(b.debit) AS debit, SUM(b.credit) AS credit, SUM(b.credit) - SUM(b.debit) AS saldo, ac.currency_id, c.currency_symbol FROM
+(
+SELECT a.account_id, a.account_name, SUM(seat_detail_mount) AS debit, 0 AS credit, sd.seat_id FROM account a 
+INNER JOIN seat_detail sd ON sd.account_debit_id = a.account_id
+GROUP BY account_id, account_name, sd.seat_id
+UNION ALL
+SELECT a.account_id, a.account_name, 0 AS debit, SUM(seat_detail_mount) AS credit, sd.seat_id FROM account a 
+INNER JOIN seat_detail sd ON sd.account_credit_id = a.account_id
+GROUP BY account_id, account_name, sd.seat_id
+) as b
+INNER JOIN seat s ON s.seat_id = b.seat_id
+INNER JOIN diary_book db ON db.diary_book_id = s.diary_book_id
+INNER JOIN account ac ON ac.account_id = b.account_id
+INNER JOIN currency c ON c.currency_id = ac.currency_id
+WHERE
+    ac.account_type_id IN (4, 5, 11)
+"""
+    + (f" AND YEAR(s.seat_datetime) = {selectedYear} " if int(selectedYear) > 0 else "") +
+"""
+GROUP BY
+    b.account_id, b.account_name
+ORDER BY b.account_name
+                   """)
+    rows = cursor.fetchall()
+    return rows
