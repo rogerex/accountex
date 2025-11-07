@@ -1,5 +1,8 @@
 # Django settings for accountex project.
 
+import os
+
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -107,11 +110,13 @@ ROOT_URLCONF = 'accountex.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'accountex.wsgi.application'
 
+BASE_ROOT = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_ROOT = os.path.join(BASE_ROOT, 'templates/')
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            '/Users/rog/Library/Python/3.10/lib/python/site-packages/django/contrib/admin/templates',
+            TEMPLATE_ROOT,
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -138,8 +143,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
-    'django.contrib.admin',
     'financial',
+    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
