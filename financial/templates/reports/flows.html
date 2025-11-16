@@ -131,6 +131,14 @@ function getColor() {
             <th class="sortable">Credit</th>
             <th class="sortable">Currency</th>
             <th class="sortable">Saldo</th>
+            {% if currentYear %}
+              <th class="sortable">Today</th>
+              <th class="sortable">MTD</th>
+              <th class="sortable">LY</th>
+              <th class="sortable">L6M</th>
+              <th class="sortable">L3M</th>
+              <th class="sortable">LM</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
@@ -142,6 +150,14 @@ function getColor() {
             <td style="text-align: right;">{{ row.credit }}</td>
             <td>{{ row.currencySymbol }}</td>
             <td style="text-align: right;">{{ row.saldo }}</td>
+            {% if currentYear %}
+              <td style="text-align: right;">{{ row.total_today }}</td>
+              <td style="text-align: right;">{{ row.total_mtd }}</td>
+              <td style="text-align: right;">{{ row.total_last_365_days }}</td>
+              <td style="text-align: right;">{{ row.total_last_6_months }}</td>
+              <td style="text-align: right;">{{ row.total_last_3_months }}</td>
+              <td style="text-align: right;">{{ row.total_last_30_days }}</td>
+            {% endif %}
           </tr>
       {% endfor %}
         </tbody>

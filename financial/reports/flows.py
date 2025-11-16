@@ -1,6 +1,10 @@
 from datetime import datetime
 from django.db import connection
 from django.shortcuts import render
+from datetime import datetime, timedelta
+from financial.models import SeatDetail
+from django.db.models import Sum
+from financial.reports.flowing.models import OutReportRow
 from financial.reports.models.shared import AccountRow
 from financial.reports.shared.grouping import build_groups
 
@@ -12,6 +16,10 @@ def execute_flows_raw_sql(request):
   tagGroups = __tag_accounts()
 
   filteredOutRows, deletedOutRows, ignoredOutRows, currencyTagGroups, viewCurrencyTagGroups, dataCurrencies = build_groups(rawOutRows, tagGroups)
+
+  isThisYear = int(activeYear) == datetime.today().year
+  if isThisYear:
+    filteredOutRows = [__calculate_asset_totals(item) for item in filteredOutRows]
 
   rawInRows = __execute_in_raw_sql(activeYear)
   inRows = []
@@ -33,6 +41,7 @@ def execute_flows_raw_sql(request):
     'activeTab': int(activeTab),
     'activeYear': int(activeYear),
     'allowedYears': range(2010, datetime.today().year + 1),
+    'currentYear': isThisYear,
   }
 
   return render(request, 'reports/flows.html', context)
@@ -156,3 +165,53 @@ ORDER BY b.account_name
                    """)
     rows = cursor.fetchall()
     return rows
+  
+def __calculate_asset_totals(patrimonyRow):
+    row = OutReportRow(patrimonyRow)
+
+    current_datetime = datetime.today()
+    year = current_datetime.year
+    month = current_datetime.month
+    day = current_datetime.day
+
+    #Today
+    start_date = datetime(year, month, day, 0, 0, 0)
+    end_date = datetime(year, month, day, 23, 59, 59)
+    row.total_today = __calculate_total(start_date, end_date, row.account_id)
+
+    #MTD
+    start_date = datetime(year, month, 1, 0, 0, 0)
+    end_date = datetime(year, month, day, 23, 59, 59)
+    row.total_mtd = __calculate_total(start_date, end_date, row.account_id)
+
+    #Last year
+    start_date = datetime(year - 1, month, day, 0, 0, 0)
+    end_date = datetime(year, month, day, 23, 59, 59)
+    row.total_last_365_days = __calculate_total(start_date, end_date, row.account_id)
+
+    #Last 30 days
+    days_ago_30 = current_datetime - timedelta(days=30)
+    start_date = datetime(days_ago_30.year, days_ago_30.month, days_ago_30.day, 0, 0, 0)
+    end_date = datetime(year, month, day, 23, 59, 59)
+    row.total_last_30_days = __calculate_total(start_date, end_date, row.account_id)
+
+    #Last 3 months
+    months_ago_3 = current_datetime - timedelta(days=90)
+    start_date = datetime(months_ago_3.year, months_ago_3.month, months_ago_3.day, 0, 0, 0)
+    end_date = datetime(year, month, day, 23, 59, 59)
+    row.total_last_3_months = __calculate_total(start_date, end_date, row.account_id)
+
+    #Last 6 months
+    months_ago_6 = current_datetime - timedelta(days=180)
+    start_date = datetime(months_ago_6.year, months_ago_6.month, months_ago_6.day, 0, 0, 0)
+    end_date = datetime(year, month, day, 23, 59, 59)
+    row.total_last_6_months = __calculate_total(start_date, end_date, row.account_id)
+
+    return row
+
+def __calculate_total(start_date, end_date, account_id):
+    debitTotal = SeatDetail.objects.filter(debitAccount__id=account_id, seat__datetime__gte=start_date, seat__datetime__lte=end_date).aggregate(total=Sum('mount'))
+    creditTotal = SeatDetail.objects.filter(creditAccount__id=account_id, seat__datetime__gte=start_date, seat__datetime__lte=end_date).aggregate(total=Sum('mount'))
+
+    total = (debitTotal['total'] if debitTotal and debitTotal['total'] else 0) - (creditTotal['total'] if creditTotal and creditTotal['total'] else 0)
+    return total

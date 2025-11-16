@@ -5,7 +5,7 @@ from financial.reports.patrimoning.assets import calculate_assets
 from financial.reports.shared.grouping import build_groups
 
 def execute_patrimony_raw_sql(request):
-  activeTab = request.GET.get('tab', 1)
+  activeTab = request.GET.get('tab', 2)
 
   rawRows = __execute_raw_sql()
   tagGroups = __tag_accounts()
@@ -80,6 +80,10 @@ def __tag_accounts():
       {
           'name': 'Departamentos',
           'prefixs': ['Departamento'],
+      },
+      {
+          'name': 'Devices',
+          'prefixs': ['Devices', 'Z - Depreciacion Acumulada de Devices'],
       },
       {
           'name': 'Deudas',
