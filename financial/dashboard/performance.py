@@ -189,7 +189,7 @@ def get_previous_month_names(num_months=3):
 
     return previous_months[::-1]
 
-def get_data_lines(accounts, dataRaws, filterAccountProperty):
+def get_data_lines(accounts, baseFilters, filterAccountProperty):
   dataLines = []
   for account in accounts:
       id = account.id
@@ -198,10 +198,10 @@ def get_data_lines(accounts, dataRaws, filterAccountProperty):
       dataLine.label = account.name
 
       amount = 0
-      for dataRaw in dataRaws:
-        dataRaw['filter'][filterAccountProperty] = id # eg. debitAccount__id
+      for filter in baseFilters:
+        filter['filter'][filterAccountProperty] = id # eg. debitAccount__id
 
-        detailsTill = SeatDetail.objects.filter(**dataRaw['filter'])
+        detailsTill = SeatDetail.objects.filter(**filter['filter'])
         detailsTillBeforeTotal = amount
         for detail in detailsTill:
           detailsTillBeforeTotal += detail.mount
@@ -213,7 +213,7 @@ def get_data_lines(accounts, dataRaws, filterAccountProperty):
       dataLines.append(dataLine)
   return dataLines
 
-def get_data_raws_by_month(end_date, num_months):
+def get_base_filters_by_month(end_date, num_months):
   dataRaws = []
   for i in range(num_months):
     first_date = end_date
@@ -243,8 +243,9 @@ def get_data_by_month(months, accounts):
   today = datetime.today()
   end_date = today - relativedelta(months=months-1)
 
-  dataRaws = get_data_raws_by_month(end_date, months)
-  debitLines = get_data_lines(accounts, dataRaws, 'debitAccount__id')
-  creditLines = get_data_lines(accounts, dataRaws, 'creditAccount__id')
+  debitBaseFilters = get_base_filters_by_month(end_date, months)
+  creditBaseFilters = get_base_filters_by_month(end_date, months) # Same as debit however it could add more filters and references in future
+  debitLines = get_data_lines(accounts, debitBaseFilters, 'debitAccount__id')
+  creditLines = get_data_lines(accounts, creditBaseFilters, 'creditAccount__id')
 
   return labels, debitLines, creditLines
