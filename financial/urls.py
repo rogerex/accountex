@@ -16,5 +16,5 @@ urlpatterns = [
     re_path(r'^financial/account-type/(?P<id>\d+)/report/$', account_type_report, name='account_type_report'),
     re_path(r'^financial/patrimony/$', execute_patrimony_raw_sql, name='patrimony_report'),
     re_path(r'^financial/flows/$', execute_flows_raw_sql, name='flows_report'),
-    re_path(r'^financial/dashboard/performance/$', performance_widget, name='performance_widget'),
+    re_path(r'^financial/dashboard/$', performance_widget, name='performance_widget'),
 ]
