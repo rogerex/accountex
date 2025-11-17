@@ -1,5 +1,7 @@
 asgiref==3.10.0
 Django==4.0.1
 PyMySQL==1.1.2
+python-dateutil==2.9.0.post0
+six==1.17.0
 sqlparse==0.5.3
 typing_extensions==4.15.0
