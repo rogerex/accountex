@@ -1,5 +1,6 @@
 import calendar
 from dateutil.relativedelta import relativedelta
+from django import forms
 from django.shortcuts import render
 from financial.models import SeatDetail, Account
 from datetime import date, datetime, timedelta
@@ -20,11 +21,36 @@ class PresetMode:
     TenYears = 12
     All = 13
 
+class AccountForm(forms.ModelForm):
+    accounts = forms.ModelMultipleChoiceField(
+        #choices=[('red', 'Red'), ('blue', 'Blue'), ('green', 'Green')],
+        queryset=Account.objects.all(),
+        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
+        required=False
+    )
+    class Meta:
+        model = Account
+        fields = []
+
 def performance_widget(request):
   presetModeStr = request.GET.get('presetMode', 1)
   presetMode = int(presetModeStr)
 
-  accountIdsStr = request.GET.getlist('accountId', ['1'])
+  accountIdsStr = request.GET.getlist('accountId', ['1', '43'])
+  
+  if request.method == 'POST':
+    form = AccountForm(request.POST)
+    if form.is_valid():
+      selected_items = form.cleaned_data['accounts']
+      request.session['saved_accounts'] = [str(item.id) for item in selected_items]
+      accountIdsStr = [str(item.id) for item in selected_items]
+  else:
+    selected_items = request.session.get('saved_accounts', accountIdsStr)
+    selected_accounts = Account.objects.filter(id__in=selected_items)
+    accountIdsStr = [str(item.id) for item in selected_accounts]
+
+    form = AccountForm(initial={'accounts': selected_accounts})
+
   accounts = []
   for accountId in accountIdsStr:
     id = int(accountId)
@@ -114,7 +140,7 @@ def performance_widget(request):
 
 
     case PresetMode.MonthToDate:
-      weeks = get_week_of_month(datetime.today())
+      weeks = get_week_of_month(datetime.today()) - 1
       labels, debitLines, creditLines = get_data_by_week(weeks, accounts)
 
 
@@ -179,6 +205,7 @@ def performance_widget(request):
     'debitLines': debitLines,
     'creditLines': creditLines,
     'presetMode': presetMode,
+    'form': form
   }
   return render(request, 'dashboard/performance.html', context)
 

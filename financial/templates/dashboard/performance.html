@@ -29,17 +29,26 @@ function getColor() {
 }
 </script>
 
+
+
 <div class="row">
   <div class="col">
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="button btn-primary">Submit</button>
+    </form>
+  </div>
+  <div class="col">
     <div>
-      <canvas id="myChart1" width="800" height="400"></canvas>
+      <canvas id="myChart1" width="700" height="400"></canvas>
     </div>
   </div>
   <br />
   <br />
   <div class="col">
     <div>
-      <canvas id="myChart2" width="800" height="400"></canvas>
+      <canvas id="myChart2" width="700" height="400"></canvas>
     </div>
   </div>
 </div>
