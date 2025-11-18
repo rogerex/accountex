@@ -24,7 +24,7 @@ def performance_widget(request):
   presetModeStr = request.GET.get('presetMode', 1)
   presetMode = int(presetModeStr)
 
-  accountIdsStr = request.GET.getlist('accountId', ['116'])
+  accountIdsStr = request.GET.getlist('accountId', ['1'])
   accounts = []
   for accountId in accountIdsStr:
     id = int(accountId)
@@ -154,11 +154,20 @@ def performance_widget(request):
 
 
     case PresetMode.FiveYears:
-      print("The color is FiveYears.")
+      years = 5
+      labels, debitLines, creditLines = get_data_by_year(years, accounts)
+
+
     case PresetMode.TenYears:
-      print("The color is TenYears.")
+      years = 10
+      labels, debitLines, creditLines = get_data_by_year(years, accounts)
+
+
     case PresetMode.All:
-      print("The color is All.")
+      years = 15
+      labels, debitLines, creditLines = get_data_by_year(years, accounts)
+
+
     case _: # Default case for any other value (optional)
         print("Unknown color.")
 
@@ -219,7 +228,7 @@ def get_base_filters_by_month(end_date, num_months):
     first_date = end_date
     next_date = first_date + timedelta(days=calendar.monthrange(first_date.year, first_date.month)[1])
 
-    start_date = first_date.replace(day=1,hour=0, minute=0, second=0, microsecond=0)
+    start_date = first_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     end_date = next_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     if i == 0:
@@ -249,3 +258,50 @@ def get_data_by_month(months, accounts):
   creditLines = get_data_lines(accounts, creditBaseFilters, 'creditAccount__id')
 
   return labels, debitLines, creditLines
+
+def get_base_filters_by_year(end_date, num_years):
+  dataRaws = []
+  for i in range(num_years):
+    first_date = end_date
+    next_date = first_date.replace(year=first_date.year + 1)
+
+    start_date = first_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    end_date = next_date.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    if i == 0:
+      dataRaws.append({
+        'filter': {
+          'seat__datetime__lt': end_date
+        }
+      })
+    else:
+      dataRaws.append({
+        'filter': {
+            'seat__datetime__gte': start_date,
+            'seat__datetime__lt': end_date
+          }
+      })
+  return dataRaws
+
+def get_data_by_year(years, accounts):
+  labels = get_previous_year_names(years)
+
+  today = datetime.today()
+  end_date = today - relativedelta(years=years-1)
+  debitBaseFilters = get_base_filters_by_year(end_date, years)
+  creditBaseFilters = get_base_filters_by_year(end_date, years) # Same as debit however it could add more filters and references in future
+  debitLines = get_data_lines(accounts, debitBaseFilters, 'debitAccount__id')
+  creditLines = get_data_lines(accounts, creditBaseFilters, 'creditAccount__id')
+
+  return labels, debitLines, creditLines
+
+def get_previous_year_names(num_years=3):
+    previous_years = []
+    current_date = datetime.now()
+
+    for i in range(num_years):
+        previous_year_date = current_date.replace(day=1)
+        previous_years.append(previous_year_date.strftime("%Y"))
+        current_date = previous_year_date  - timedelta(days=365) # Update current_date for the next iteration
+
+    return previous_years[::-1]
