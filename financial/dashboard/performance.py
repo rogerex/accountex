@@ -2,7 +2,7 @@ import calendar
 from dateutil.relativedelta import relativedelta
 from django.shortcuts import render
 from financial.models import SeatDetail, Account
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from ..reports.models.shared import DataLine
 
 class PresetMode:
@@ -114,17 +114,18 @@ def performance_widget(request):
 
 
     case PresetMode.MonthToDate:
-      months = 1
-      labels, debitLines, creditLines = get_data_by_month(months, accounts)
+      weeks = get_week_of_month(datetime.today())
+      labels, debitLines, creditLines = get_data_by_week(weeks, accounts)
+
 
     case PresetMode.OneMonth:
-      months = 2
-      labels, debitLines, creditLines = get_data_by_month(months, accounts)
+      weeks = 4
+      labels, debitLines, creditLines = get_data_by_week(weeks, accounts)
 
 
     case PresetMode.ThreeMonths:
-      months = 3
-      labels, debitLines, creditLines = get_data_by_month(months, accounts)
+      weeks = 12
+      labels, debitLines, creditLines = get_data_by_week(weeks, accounts)
 
 
     case PresetMode.SixMonths:
@@ -181,7 +182,7 @@ def performance_widget(request):
   }
   return render(request, 'dashboard/performance.html', context)
 
-def get_previous_month_names(num_months=3):
+def get_last_n_month_names(num_months=3):
     """
     Returns a list containing the names of the specified number of previous months.
     The most recent previous month is listed first.
@@ -247,7 +248,7 @@ def get_base_filters_by_month(end_date, num_months):
   return dataRaws
 
 def get_data_by_month(months, accounts):
-  labels = get_previous_month_names(months)
+  labels = get_last_n_month_names(months)
 
   today = datetime.today()
   end_date = today - relativedelta(months=months-1)
@@ -284,7 +285,7 @@ def get_base_filters_by_year(end_date, num_years):
   return dataRaws
 
 def get_data_by_year(years, accounts):
-  labels = get_previous_year_names(years)
+  labels = get_last_n_year_names(years)
 
   today = datetime.today()
   end_date = today - relativedelta(years=years-1)
@@ -295,7 +296,7 @@ def get_data_by_year(years, accounts):
 
   return labels, debitLines, creditLines
 
-def get_previous_year_names(num_years=3):
+def get_last_n_year_names(num_years=3):
     previous_years = []
     current_date = datetime.now()
 
@@ -305,3 +306,75 @@ def get_previous_year_names(num_years=3):
         current_date = previous_year_date  - timedelta(days=365) # Update current_date for the next iteration
 
     return previous_years[::-1]
+
+def get_last_n_weeks_names(n):
+    today = date.today()
+    # Find the start of the current week (Monday)
+    start_of_current_week = today - timedelta(days=today.weekday())
+
+    weeks = []
+    for i in range(n):
+        week_start = start_of_current_week - timedelta(weeks=i)
+        weeks.append(week_start.strftime("%Y %B") + " Week " + str(week_start.isocalendar()[1]))
+    return weeks[::-1]
+
+def get_data_by_week(weeks, accounts):
+  labels = get_last_n_weeks_names(weeks)
+
+  today = date.today()
+  end_date = today - relativedelta(weeks=weeks-1)
+  debitBaseFilters = get_base_filters_by_week(end_date, weeks)
+  creditBaseFilters = get_base_filters_by_week(end_date, weeks) # Same as debit however it could add more filters and references in future
+  debitLines = get_data_lines(accounts, debitBaseFilters, 'debitAccount__id')
+  creditLines = get_data_lines(accounts, creditBaseFilters, 'creditAccount__id')
+
+  return labels, debitLines, creditLines
+
+def get_base_filters_by_week(end_date, num_weeks):
+  dataRaws = []
+  for i in range(num_weeks):
+    first_date = end_date
+
+    start_date = first_date - timedelta(weeks=i)
+    # Calculate the end of the current week in the loop (Sunday)
+    end_date = start_date + timedelta(days=6)
+
+    if i == 0:
+      dataRaws.append({
+        'filter': {
+          'seat__datetime__lt': end_date
+        }
+      })
+    else:
+      dataRaws.append({
+        'filter': {
+            'seat__datetime__gte': start_date,
+            'seat__datetime__lt': end_date
+          }
+      })
+  return dataRaws
+
+def get_week_of_month(date_obj):
+    """
+    Calculates the week number of a given date within its respective month.
+    """
+    # Get the first day of the month
+    first_day_of_month = date_obj.replace(day=1)
+
+    # Get the ISO week number for the given date and the first day of the month
+    iso_week_current_date = date_obj.isocalendar()[1]
+    iso_week_first_day = first_day_of_month.isocalendar()[1]
+
+    # Calculate the week number within the month
+    # This accounts for cases where the first day of the month might be in the
+    # last week of the previous ISO year, or the given date is in a later ISO year
+    if iso_week_current_date < iso_week_first_day:
+        # This handles cases where the current date's week number wraps around
+        # to a lower number in the new ISO year, even if it's later in the month.
+        # We need to consider the total number of ISO weeks in the previous year
+        # to get an accurate week number within the current month.
+        # For simplicity, we assume a standard year here; more robust solutions
+        # might involve checking the year of iso_week_first_day.
+        return iso_week_current_date + (52 - iso_week_first_day) + 1
+    else:
+        return iso_week_current_date - iso_week_first_day + 1
