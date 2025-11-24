@@ -117,12 +117,12 @@ def performance_widget(request):
       for account in accounts:
         id = account.id
 
-        debitDetailsTillBefore = SeatDetail.objects.filter(debitAccount__id=id, seat__datetime__lte=start_date)
+        debitDetailsTillBefore = SeatDetail.objects.filter(debitAccount__id=id, seat__datetime__lt=start_date)
         debitDetailsTillBeforeTotal = 0
         for detail in debitDetailsTillBefore:
           debitDetailsTillBeforeTotal += detail.mount
 
-        debitDetailsRange = SeatDetail.objects.filter(debitAccount__id=id, seat__datetime__gte=start_date, seat__datetime__lte=end_date)
+        debitDetailsRange = SeatDetail.objects.filter(debitAccount__id=id, seat__datetime__gte=start_date, seat__datetime__lt=end_date)
 
         debitDetailsTotal = debitDetailsTillBeforeTotal
         debitLine = DataLine()
@@ -136,11 +136,11 @@ def performance_widget(request):
           debitLine.values.append(debitDetailsTotal)
         debitLines.append(debitLine)
 
-      creditLines = [];
+      creditLines = []
 
 
     case PresetMode.MonthToDate:
-      weeks = get_week_of_month(datetime.today()) - 1
+      weeks = get_week_of_month(datetime.today())
       labels, debitLines, creditLines = get_data_by_week(weeks, accounts)
 
 
@@ -362,9 +362,9 @@ def get_base_filters_by_week(end_date, num_weeks):
   for i in range(num_weeks):
     first_date = end_date
 
-    start_date = first_date - timedelta(weeks=i)
+    start_date = first_date
     # Calculate the end of the current week in the loop (Sunday)
-    end_date = start_date + timedelta(days=6)
+    end_date = start_date + timedelta(days=7)
 
     if i == 0:
       dataRaws.append({
