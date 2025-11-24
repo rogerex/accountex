@@ -104,39 +104,8 @@ def performance_widget(request):
 
 
     case PresetMode.OneWeek:
-      labels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-
-      today = datetime.today()
-      one_week = timedelta(weeks=1)
-      new_date = today - one_week
-
-      start_date = new_date.replace(hour=0, minute=0, second=0, microsecond=0)
-      end_date = today.replace(hour=23, minute=59, second=59, microsecond=999999)
-
-      debitLines = [];
-      for account in accounts:
-        id = account.id
-
-        debitDetailsTillBefore = SeatDetail.objects.filter(debitAccount__id=id, seat__datetime__lt=start_date)
-        debitDetailsTillBeforeTotal = 0
-        for detail in debitDetailsTillBefore:
-          debitDetailsTillBeforeTotal += detail.mount
-
-        debitDetailsRange = SeatDetail.objects.filter(debitAccount__id=id, seat__datetime__gte=start_date, seat__datetime__lt=end_date)
-
-        debitDetailsTotal = debitDetailsTillBeforeTotal
-        debitLine = DataLine()
-        debitLine.label = account.name
-
-        for label in labels:
-          debitDetails = debitDetailsRange.filter(seat__datetime__week_day=labels.index(label)+1)
-          for detail in debitDetails:
-            debitDetailsTotal += detail.mount
-
-          debitLine.values.append(debitDetailsTotal)
-        debitLines.append(debitLine)
-
-      creditLines = []
+      days = 7
+      labels, debitLines, creditLines = get_data_by_day(days, accounts)
 
 
     case PresetMode.MonthToDate:
@@ -405,3 +374,51 @@ def get_week_of_month(date_obj):
         return iso_week_current_date + (52 - iso_week_first_day) + 1
     else:
         return iso_week_current_date - iso_week_first_day + 1
+
+def get_base_filters_by_day(end_date, days):
+  dataRaws = []
+  for i in range(days):
+    first_date = end_date
+
+    start_date = first_date
+    # Calculate the end of the current week in the loop (Sunday)
+    end_date = start_date + timedelta(days=1)
+
+    if i == 0:
+      dataRaws.append({
+        'filter': {
+          'seat__datetime__lt': end_date
+        }
+      })
+    else:
+      dataRaws.append({
+        'filter': {
+            'seat__datetime__gte': start_date,
+            'seat__datetime__lt': end_date
+          }
+      })
+  return dataRaws
+
+def get_data_by_day(days, accounts):
+  labels = get_last_n_day_names(days)
+
+  today = date.today()
+  end_date = today - relativedelta(days=days-1)
+  debitBaseFilters = get_base_filters_by_day(end_date, days)
+  creditBaseFilters = get_base_filters_by_day(end_date, days) # Same as debit however it could add more filters and references in future
+  debitLines = get_data_lines(accounts, debitBaseFilters, 'debitAccount__id')
+  creditLines = get_data_lines(accounts, creditBaseFilters, 'creditAccount__id')
+
+  return labels, debitLines, creditLines
+
+def get_last_n_day_names(n):
+  today = datetime.now()
+  day_names = []
+  for i in range(7):
+      # Calculate the date for each of the last 7 days
+      current_date = today - timedelta(days=i)
+      # Format the date to get the full weekday name
+      day_name = current_date.strftime('%A')
+      # Add the day name to the beginning of the list to maintain chronological order (last day first)
+      day_names.insert(0, day_name)
+  return day_names
