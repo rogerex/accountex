@@ -273,11 +273,6 @@ class SeatDetail(models.Model):
 
 queryParamForDefault = 'initial'
 
-mount = 0
-for item in INITIAL_SEAT_DETAIL:
-    if item['description'].startswith('Gastos -'):
-        mount += item['mount']
-
 class SeatDetailInlineFormSet(forms.models.BaseInlineFormSet):
     model = SeatDetail
     def __init__(self, *args, **kwargs):
@@ -308,6 +303,40 @@ class SeatAdmin(admin.ModelAdmin):
     ]
     inlines = [SeatDetailInline]
     list_display = ['code', 'datetime', 'debit', 'credit', 'report', 'status']
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+
+        if request.GET.get(queryParamForDefault, None): # Only for initial
+            form.base_fields['diary_book'].initial = 13
+            form.base_fields['code'].initial = datetime.datetime.today().strftime('%Y %m 00')
+
+            debit = 0
+            for item in INITIAL_SEAT_DETAIL:
+                if item['description'].startswith('Gastos -'):
+                    debit += item['mount']
+
+            credit = 0
+            for item in INITIAL_SEAT_DETAIL:
+                if item['description'].startswith('% B') or item['description'].startswith('Ingresos:'):
+                    credit += item['mount']
+
+            creditUSD = 0
+            for item in INITIAL_SEAT_DETAIL:
+                if item['description'].startswith('$ %'):
+                    creditUSD += item['mount']
+
+            form.base_fields['debit'].initial = debit
+            form.base_fields['credit'].initial = credit
+
+            line1 = 'Gastos Estimados - Bs {}'.format(debit)
+            line2 = 'Ingresos Estimados - Bs {}'.format(credit)
+            line3 = 'Ingresos Estimados - $us {}'.format(creditUSD)
+            form.base_fields['description'].initial = line1 + '\n' + line2 + '\n' + line3
+
+            form.base_fields['status'].initial = 1
+
+        return form
 
 class Vocabulary(models.Model):
     id = models.IntegerField(
