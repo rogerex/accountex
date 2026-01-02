@@ -4,7 +4,7 @@ from django.db import models
 from django.utils.html import escape, format_html
 import datetime
 from django import forms
-from financial.seat_initial_default import INITIAL_SEAT_DETAIL
+from financial.seat_initial_default import INITIAL_SEAT_BOOK_ID, INITIAL_SEAT_DETAIL
 
 # Create your models here.
 STATUS = (
@@ -308,7 +308,7 @@ class SeatAdmin(admin.ModelAdmin):
         form = super().get_form(request, obj, **kwargs)
 
         if request.GET.get(queryParamForDefault, None): # Only for initial
-            form.base_fields['diary_book'].initial = 13
+            form.base_fields['diary_book'].initial = INITIAL_SEAT_BOOK_ID
             form.base_fields['code'].initial = datetime.datetime.today().strftime('%Y %m 00')
 
             debit = 0

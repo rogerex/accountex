@@ -1,14 +1,14 @@
 INITIAL_SEAT_DETAIL = [
     ### Fondo de emergencia (Intereses ganados)
-    {'debitAccount': 205, 'creditAccount': 148, 'description': '$ % Aave Coinbase Wallet (Delete)', 'mount': 4, },
+    {'debitAccount': 205, 'creditAccount': 148, 'description': '$ % Aave Base Wallet (Delete)', 'mount': 4, },
     {'debitAccount': 155, 'creditAccount': 148, 'description': '$ % Staking Coinbase Exchange (Delete)', 'mount': 4, },
     {'debitAccount': 146, 'creditAccount': 148, 'description': '$ % Staking Kraken Exchange (Delete)', 'mount': 4, },
 
-    ### Fondo de ahorros para alguna de mis objetos de consumo (Intereses ganados)
+    ### Fondo de ahorros para alguna de mis objetos de consumo (Intereses ganados) para la compu
     {'debitAccount': 168, 'creditAccount': 148, 'description': '$ % Defi Blend Airtm Wallet (Delete)', 'mount': 4, },
 
     ### Fondo de IT (Intereses ganados), yo creo en un futuro me voy a comprar una casa
-    #{'debitAccount': 157, 'creditAccount': 148, 'description': '% Aave Coinbase Wallet (Delete)', 'mount': 4, },
+    #{'debitAccount': 157, 'creditAccount': 148, 'description': '% Aave Base Wallet (Delete)', 'mount': 4, },
     #{'debitAccount': 154, 'creditAccount': 148, 'description': '% Defi Nebeus Wallet (Delete)', 'mount': 4, },
     #{'debitAccount': 153, 'creditAccount': 148, 'description': '% Staking Nexo Exchange (Delete)', 'mount': 0, },
 
@@ -49,7 +49,9 @@ INITIAL_SEAT_DETAIL = [
     {'debitAccount': 196, 'creditAccount': 143, 'description': 'Gastos - Aporte hermana menor (Delete)', 'mount': 500, }, #BNB de mi hermana
 
     # Distribucion en billeteras
-    {'debitAccount': 200, 'creditAccount': 143, 'description': 'Gastos - Salud (Delete)', 'mount': 200, },         #Billetera Altoke
+    {'debitAccount': 200, 'creditAccount': 143, 'description': 'Gastos - Salud (Delete)', 'mount': 200, },           #Billetera Altoke
     {'debitAccount': 119, 'creditAccount': 143, 'description': 'Gastos - Servicios fijos (Delete)', 'mount': 300, }, #Billetera Yape
     {'debitAccount': 208, 'creditAccount': 143, 'description': 'Gastos - Mascotas (Delete)', 'mount': 400, },        #Billetera Yolo
 ]
+
+INITIAL_SEAT_BOOK_ID = 14
