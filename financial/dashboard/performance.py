@@ -25,7 +25,7 @@ class AccountForm(forms.ModelForm):
     accounts = forms.ModelMultipleChoiceField(
         #choices=[('red', 'Red'), ('blue', 'Blue'), ('green', 'Green')],
         queryset=Account.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
+        widget=forms.SelectMultiple(attrs={'class': 'form-control', 'style': 'height: 400px;'}),
         required=False
     )
     class Meta:
