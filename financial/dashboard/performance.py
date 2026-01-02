@@ -45,7 +45,13 @@ def performance_widget(request):
       request.session['saved_accounts'] = [str(item.id) for item in selected_items]
       accountIdsStr = [str(item.id) for item in selected_items]
   else:
-    selected_items = request.session.get('saved_accounts', accountIdsStr)
+    cacheStr = request.GET.get('cache', None)
+    if cacheStr == None:
+      selected_items = request.session.get('saved_accounts', accountIdsStr)
+    else:
+      selected_items = accountIdsStr
+      request.session['saved_accounts'] = accountIdsStr
+
     selected_accounts = Account.objects.filter(id__in=selected_items)
     accountIdsStr = [str(item.id) for item in selected_accounts]
 
