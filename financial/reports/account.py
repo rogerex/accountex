@@ -65,6 +65,9 @@ def account_report(request, id):
     accountDebits = SeatDetail.objects.filter(debitAccount__id=id, seat__datetime__gte=start_date, seat__datetime__lte=end_date)
     accountCredits = SeatDetail.objects.filter(creditAccount__id=id, seat__datetime__gte=start_date, seat__datetime__lte=end_date)
 
+    totalDebits = sum(d.mount for d in accountDebits)
+    totalCredits = sum(c.mount for c in accountCredits)
+
     context = {
         'accountId': id,
         'accountName': account.name,
@@ -75,6 +78,8 @@ def account_report(request, id):
         'allowedYears': range(1, 15),
         'accountDebits': accountDebits,
         'accountCredits': accountCredits,
+        'totalDebits': totalDebits,
+        'totalCredits': totalCredits,
     }
     return render(request, 'reports/account.html', context)
 
