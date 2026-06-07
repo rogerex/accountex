@@ -122,47 +122,73 @@ function getColor() {
     </div>
 
     <div class="tab-pane fade {% if activeTab == 2 %}show active{% endif %}" id="v-pills-out-accounts" role="tabpanel" aria-labelledby="v-pills-out-accounts-tab" tabindex="0">
-      <!-- Table (Out Account details) -->
-      <table>
-        <thead class="sticky-header">
-          <tr>
-            <th>Account Id</th>
-            <th class="sortable">Account Name</th>
-            <th class="sortable">Debit</th>
-            <th class="sortable">Credit</th>
-            <th class="sortable">Currency</th>
-            <th class="sortable">Saldo</th>
-            {% if currentYear %}
-              <th class="sortable">Today</th>
-              <th class="sortable">MTD</th>
-              <th class="sortable">LY</th>
-              <th class="sortable">L6M</th>
-              <th class="sortable">L3M</th>
-              <th class="sortable">LM</th>
-            {% endif %}
-          </tr>
-        </thead>
-        <tbody>
-      {% for row in outRows %}
-          <tr>
-            <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
-            <td>{{ row.account_name }}</td>
-            <td style="text-align: right;">{{ row.debit }}</td>
-            <td style="text-align: right;">{{ row.credit }}</td>
-            <td>{{ row.currencySymbol }}</td>
-            <td style="text-align: right;">{{ row.saldo }}</td>
-            {% if currentYear %}
-              <td style="text-align: right;">{{ row.total_today }}</td>
-              <td style="text-align: right;">{{ row.total_mtd }}</td>
-              <td style="text-align: right;">{{ row.total_last_365_days }}</td>
-              <td style="text-align: right;">{{ row.total_last_6_months }}</td>
-              <td style="text-align: right;">{{ row.total_last_3_months }}</td>
-              <td style="text-align: right;">{{ row.total_last_30_days }}</td>
-            {% endif %}
-          </tr>
-      {% endfor %}
-        </tbody>
-      </table>
+      <div class="row">
+        <div class="col-8">
+          <!-- Table (Out Account details) -->
+          <table>
+            <thead class="sticky-header">
+              <tr>
+                <th>Account Id</th>
+                <th class="sortable">Account Name</th>
+                <th class="sortable">Debit</th>
+                <th class="sortable">Credit</th>
+                <th class="sortable">Currency</th>
+                <th class="sortable">Saldo</th>
+                {% if isCurrentYear %}
+                  <th class="sortable">Today</th>
+                  <th class="sortable">MTD</th>
+                  <th class="sortable">LY</th>
+                  <th class="sortable">L6M</th>
+                  <th class="sortable">L3M</th>
+                  <th class="sortable">LM</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody>
+          {% for row in outRows %}
+              <tr>
+                <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
+                <td>{{ row.account_name }}</td>
+                <td style="text-align: right;">{{ row.debit }}</td>
+                <td style="text-align: right;">{{ row.credit }}</td>
+                <td>{{ row.currencySymbol }}</td>
+                <td style="text-align: right;">{{ row.saldo }}</td>
+                {% if isCurrentYear %}
+                  <td style="text-align: right;">{{ row.total_today }}</td>
+                  <td style="text-align: right;">{{ row.total_mtd }}</td>
+                  <td style="text-align: right;">{{ row.total_last_365_days }}</td>
+                  <td style="text-align: right;">{{ row.total_last_6_months }}</td>
+                  <td style="text-align: right;">{{ row.total_last_3_months }}</td>
+                  <td style="text-align: right;">{{ row.total_last_30_days }}</td>
+                {% endif %}
+              </tr>
+          {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="col-4">
+          <!-- Table (Out Totals) -->
+          <table>
+            <thead class="sticky-header">
+              <tr>
+                <th class="sortable">Name</th>
+                <th class="sortable">Currency</th>
+                <th class="sortable">Saldo</th>
+              </tr>
+            </thead>
+            <tbody>
+          {% for row in summaryOutTotals %}
+              <tr>
+                <td>{{ row.currency.name }}</td>
+                <td>{{ row.currency.symbol }}</td>
+                <td style="text-align: right;">{{ row.total }}</td>
+              </tr>
+          {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
     </div>
 
     <div class="tab-pane fade {% if activeTab == 3 %}show active{% endif %}" id="v-pills-details" role="tabpanel" aria-labelledby="v-pills-details-tab" tabindex="0">
@@ -258,31 +284,56 @@ function getColor() {
     </div>
 
     <div class="tab-pane fade {% if activeTab == 5 %}show active{% endif %}" id="v-pills-in-accounts" role="tabpanel" aria-labelledby="v-pills-in-accounts-tab" tabindex="0">
-      <!-- Table (In Account details) -->
-      <table>
-        <thead>
-          <tr>
-            <th>Account Id</th>
-            <th class="sortable">Account Name</th>
-            <th class="sortable">Debit</th>
-            <th class="sortable">Credit</th>
-            <th class="sortable">Currency</th>
-            <th class="sortable">Saldo</th>
-          </tr>
-        </thead>
-        <tbody>
-      {% for row in inRows %}
-          <tr>
-            <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
-            <td>{{ row.account_name }}</td>
-            <td style="text-align: right;">{{ row.debit }}</td>
-            <td style="text-align: right;">{{ row.credit }}</td>
-            <td>{{ row.currencySymbol }}</td>
-            <td style="text-align: right;">{{ row.saldo }}</td>
-          </tr>
-      {% endfor %}
-        </tbody>
-      </table>
+      <div class="row">
+        <div class="col-8">
+          <!-- Table (In Account details) -->
+          <table>
+            <thead>
+              <tr>
+                <th>Account Id</th>
+                <th class="sortable">Account Name</th>
+                <th class="sortable">Debit</th>
+                <th class="sortable">Credit</th>
+                <th class="sortable">Currency</th>
+                <th class="sortable">Saldo</th>
+              </tr>
+            </thead>
+            <tbody>
+          {% for row in inRows %}
+              <tr>
+                <td><a href="/admin/financial/account/{{ row.account_id }}/report/">{{ row.account_id }}</a></td>
+                <td>{{ row.account_name }}</td>
+                <td style="text-align: right;">{{ row.debit }}</td>
+                <td style="text-align: right;">{{ row.credit }}</td>
+                <td>{{ row.currencySymbol }}</td>
+                <td style="text-align: right;">{{ row.saldo }}</td>
+              </tr>
+          {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="col-4">
+          <!-- Table (In Totals) -->
+          <table>
+            <thead class="sticky-header">
+              <tr>
+                <th class="sortable">Name</th>
+                <th class="sortable">Currency</th>
+                <th class="sortable">Saldo</th>
+              </tr>
+            </thead>
+            <tbody>
+          {% for row in summaryInTotals %}
+              <tr>
+                <td>{{ row.currency.name }}</td>
+                <td>{{ row.currency.symbol }}</td>
+                <td style="text-align: right;">{{ row.total }}</td>
+              </tr>
+          {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
   </div>

@@ -2,7 +2,7 @@ from datetime import datetime
 from django.db import connection
 from django.shortcuts import render
 from datetime import datetime, timedelta
-from financial.models import SeatDetail
+from financial.models import Currency, SeatDetail
 from django.db.models import Sum
 from financial.reports.flowing.models import OutReportRow
 from financial.reports.models.shared import AccountRow
@@ -27,21 +27,36 @@ def execute_flows_raw_sql(request):
       obj = AccountRow(rawRow[0], rawRow[1], rawRow[2], rawRow[3], rawRow[4], rawRow[5], rawRow[6])
       inRows.append(obj)
 
+  currencies = Currency.objects.all()
+  summaryOutTotals = []
+  summaryInTotals = []
+  for currency in currencies:
+    summaryInTotals.append({
+      'currency': currency,
+      'total': sum(item.saldo for item in list(filter(lambda n: n.currencyId==currency.id, inRows)))
+    })
+    summaryOutTotals.append({
+      'currency': currency,
+      'total': sum(item.saldo for item in list(filter(lambda n: n.currencyId==currency.id, filteredOutRows)))
+    })
+
   context = {
     'outRows': filteredOutRows,
     'deletedOutRows': deletedOutRows,
     'ignoredOutRows': ignoredOutRows,
+    'summaryOutTotals': summaryOutTotals,
 
     'currencyTagGroups': currencyTagGroups,
     'viewCurrencyTagGroups': viewCurrencyTagGroups,
 
     'inRows': inRows,
+    'summaryInTotals': summaryInTotals,
 
     'datetime': datetime.today(),
     'activeTab': int(activeTab),
     'activeYear': int(activeYear),
     'allowedYears': range(2010, datetime.today().year + 1),
-    'currentYear': isThisYear,
+    'isCurrentYear': isThisYear,
   }
 
   return render(request, 'reports/flows.html', context)
@@ -132,7 +147,7 @@ def __tag_accounts():
     },
     {
       'name': 'Xitas',
-      'prefixs': ['Xitas', 'ZZ - Deprecated - Xitas:'],
+      'prefixs': ['Xitas', 'ZZ - Deprecated - Xitas:', 'ZZ - Deprecated - Mireya'],
     },
   ]
 
