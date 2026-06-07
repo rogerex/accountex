@@ -37,6 +37,7 @@ function getColor() {
     <a class="nav-link {% if activeTab == 3 %}active{% endif %}" id="v-pills-details-tab" data-bs-toggle="pill" data-bs-target="#v-pills-details" role="tab" aria-controls="v-pills-details" aria-selected="false" href="{% url 'patrimony_report' %}?tab=3">Details by Currency</a>
     <a class="nav-link {% if activeTab == 4 %}active{% endif %}" id="v-pills-other-rows-tab" data-bs-toggle="pill" data-bs-target="#v-pills-other-rows" role="tab" aria-controls="v-pills-other-rows" aria-selected="false" href="{% url 'patrimony_report' %}?tab=4">Deleted and Ignored Rows</a>
     <a class="nav-link {% if activeTab == 5 %}active{% endif %}" id="v-pills-assets-tab" data-bs-toggle="pill" data-bs-target="#v-pills-assets" role="tab" aria-controls="v-pills-assets" aria-selected="false" href="{% url 'patrimony_report' %}?tab=5">Assets</a>
+    <a class="nav-link {% if activeTab == 6 %}active{% endif %}" id="v-pills-matrix-tab" data-bs-toggle="pill" data-bs-target="#v-pills-matrix" role="tab" aria-controls="v-pills-matrix" aria-selected="false" href="{% url 'patrimony_report' %}?tab=6">Currency Matrix</a>
   </div>
   <div class="tab-content w-100" id="v-pills-tabContent">
     <div class="tab-pane fade {% if activeTab == 1 %}show active{% endif %}" id="v-pills-charts" role="tabpanel" aria-labelledby="v-pills-charts-tab" tabindex="0">
@@ -229,6 +230,40 @@ function getColor() {
           </ul>
         </div>
       </div>
+    </div>
+
+    <div class="tab-pane fade {% if activeTab == 6 %}show active{% endif %}" id="v-pills-matrix" role="tabpanel" aria-labelledby="v-pills-matrix-tab" tabindex="0">
+      <h3>Currency Comparison Matrix</h3>
+      <table>
+        <thead class="sticky-header">
+          <tr>
+            <th>Currency</th>
+            <th class="sortable" style="text-align: right;">Own Total</th>
+            {% for col in currency_matrix.columns %}
+            <th class="sortable" style="text-align: right;">{{ col.header }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in currency_matrix.rows %}
+          <tr>
+            <td>{{ row.source_symbol }}</td>
+            <td style="text-align: right;">{{ row.source_total|floatformat:2 }}</td>
+            {% for cell in row.cells %}
+            <td style="text-align: right;">{{ cell.symbol }} {{ cell.value|floatformat:2 }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2"><h4>Grand Total</h4></td>
+            {% for cell in currency_matrix.total_cells %}
+            <td style="text-align: right;"><h4>{{ cell.symbol }} {{ cell.value|floatformat:2 }}</h4></td>
+            {% endfor %}
+          </tr>
+        </tfoot>
+      </table>
     </div>
 
     <div class="tab-pane fade {% if activeTab == 5 %}show active{% endif %}" id="v-pills-assets" role="tabpanel" aria-labelledby="v-pills-assets-tab" tabindex="0">

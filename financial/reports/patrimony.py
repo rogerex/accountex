@@ -19,6 +19,7 @@ def execute_patrimony_raw_sql(request):
       'rows': filteredRows,
       'deletedRows': deletedRows,
       'ignoredRows': ignoredRows,
+      'currency_matrix': __build_currency_matrix(viewCurrencyTagGroups),
 
       'currencyTagGroups': currencyTagGroups,
       'viewCurrencyTagGroups': viewCurrencyTagGroups,
@@ -51,7 +52,7 @@ INNER JOIN diary_book db ON db.diary_book_id = s.diary_book_id
 INNER JOIN account ac ON ac.account_id = b.account_id
 INNER JOIN currency c ON c.currency_id = ac.currency_id
 WHERE
-    ac.account_type_id IN (1, 2, 3, 9)
+    ac.account_type_id IN (1, 2, 3, 4, 5, 9)
 GROUP BY
     b.account_id, b.account_name
 ORDER BY b.account_name
@@ -134,3 +135,52 @@ def __tag_accounts():
           'prefixs': ['Zapatillas', 'Z - Depreciacion Acumulada de Zapatillas'],
       },
   ]
+
+_CONVERSION_RATES = {
+    ('USD', 'USD', 'Oficial'):   1.0,
+    ('USD', 'USD', 'Paralelo'):  1.0,
+    ('BOB', 'BOB', 'Oficial'):   1.0,
+    ('BOB', 'BOB', 'Paralelo'):  1.0,
+    ('USD', 'BOB', 'Oficial'):   6.86,
+    ('USD', 'BOB', 'Paralelo'):  9.54,
+    ('BOB', 'USD', 'Oficial'):   1 / 6.86,
+    ('BOB', 'USD', 'Paralelo'):  1 / 9.54,
+}
+
+def __build_currency_matrix(viewCurrencyTagGroups):
+    # One column per (target_currency × rate_type)
+    columns = []
+    for target_group in viewCurrencyTagGroups:
+        for rate_label in ['Oficial', 'Paralelo']:
+            columns.append({
+                'header': f"{target_group.currency.symbol} ({rate_label})",
+                'target_code': target_group.currency.code,
+                'target_symbol': target_group.currency.symbol,
+                'rate_label': rate_label,
+            })
+
+    col_totals = [0.0] * len(columns)
+    rows = []
+    for source_group in viewCurrencyTagGroups:
+        source_code = source_group.currency.code
+        source_total = source_group.total
+        cells = []
+        for i, col in enumerate(columns):
+            rate = _CONVERSION_RATES.get((source_code, col['target_code'], col['rate_label']))
+            value = round(source_total * rate, 2) if rate is not None else None
+            if value is not None:
+                col_totals[i] += value
+            cells.append({'symbol': col['target_symbol'], 'value': value})
+
+        rows.append({
+            'source_symbol': source_group.currency.symbol,
+            'source_total': round(source_total, 2),
+            'cells': cells,
+        })
+
+    total_cells = [
+        {'symbol': col['target_symbol'], 'value': round(col_totals[i], 2)}
+        for i, col in enumerate(columns)
+    ]
+
+    return {'columns': columns, 'rows': rows, 'total_cells': total_cells}
