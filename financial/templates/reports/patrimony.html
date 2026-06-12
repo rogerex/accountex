@@ -21,12 +21,95 @@
 <br />
 
 <script>
-var colors = ["#46BFBD", "#F7464A", "#FDB45C", "#949FB1", "#4D5360", "#FF5A5E", "#5AD3D1", "#FFC870", "#A8B3C5", "#616774"]
+var colors = ["#46BFBD", "#F7464A", "#FDB45C", "#949FB1", "#4D5360", "#9B59B6", "#27AE60", "#FFC870", "#E67E22", "#2980B9", "#E91E63", "#00BCD4"]
 var i = 0;
 
 function getColor() {
   i++;
   return colors[(i-1)%colors.length];
+}
+
+function restartColor() {
+  i = 0;
+}
+
+function buildTagGroupData(labels, totals, percentages, currencyLabel) {
+  restartColor();
+  var data = {
+    labels: labels,
+    datasets: [{
+      data: totals,
+      backgroundColor: labels.map(function() { return getColor(); }),
+      label: currencyLabel
+    }]
+  };
+  restartColor();
+  data.datasets.push({
+    data: percentages,
+    backgroundColor: labels.map(function() { return getColor(); }),
+    label: '%'
+  });
+  return data;
+}
+
+function openTagGroupModal(elements, tagGroupRows) {
+  if (!elements.length) return;
+  var group = tagGroupRows[elements[0].index];
+  if (!group) return;
+  document.getElementById('assetGroupRowsModalLabel').textContent = group.name;
+  var tbody = document.getElementById('assetGroupRowsBody');
+  tbody.innerHTML = '';
+  var total = 0;
+  group.rows.forEach(function(row) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + row.account_name + '</td><td style="text-align:right;">' + row.saldo.toFixed(2) + '</td>';
+    tbody.appendChild(tr);
+    total += row.saldo;
+  });
+  var tfootTr = document.createElement('tr');
+  tfootTr.innerHTML = '<td><strong>Total</strong></td><td style="text-align:right;"><strong>' + total.toFixed(2) + '</strong></td>';
+  tbody.appendChild(tfootTr);
+  var existingChart = Chart.getChart('assetGroupRowsPieChart');
+  if (existingChart) existingChart.destroy();
+  var pieCtx = document.getElementById('assetGroupRowsPieChart').getContext('2d');
+  new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+      labels: group.rows.map(function(r) { return r.account_name; }),
+      datasets: [{ data: group.rows.map(function(r) { return r.saldo; }), backgroundColor: group.rows.map(function() { return getColor(); }) }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 12 } },
+        title: { display: true, text: group.name },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              var t = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+              var pct = t ? (context.parsed / t * 100).toFixed(1) : 0;
+              return '%: ' + pct + ' -> ' + group.currencySymbol + ': ' + context.parsed;
+            }
+          }
+        }
+      }
+    }
+  });
+  new bootstrap.Modal(document.getElementById('assetGroupRowsModal')).show();
+}
+
+function buildDoughnutChart(canvasId, data, title, onClick) {
+  var ctx = document.getElementById(canvasId).getContext('2d');
+  var options = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: { display: true, text: title }
+    }
+  };
+  if (onClick) options.onClick = onClick;
+  return new Chart(ctx, { type: 'doughnut', data: data, options: options });
 }
 </script>
 
@@ -52,61 +135,16 @@ function getColor() {
             <div><h1>{{ currencyTagGroup.currency.symbol }} {{ currencyTagGroup.total|floatformat:2 }}</h1></div>
           </div>
           <script>
-            var i = 0;
-            var data = {
-              labels: [
-                {% for value in currencyTagGroup.tagGroups %}
-                "{{ value.name }}",
-                {% endfor %}
-              ],
-              datasets: [
-                {
-                  data: [
-                    {% for value in currencyTagGroup.tagGroups %}
-                    "{{ value.total }}",
-                    {% endfor %}
-                  ],
-                  backgroundColor: [
-                    {% for value in currencyTagGroup.tagGroups %}
-                    getColor(),
-                    {% endfor %}
-                  ],
-                  label: "{{ currencyTagGroup.currency.symbol }}"
-                },
-              ]
-            };
-            i = 0;
-            data.datasets.push({
-              data: [
-                {% for value in currencyTagGroup.tagGroups %}
-                "{{ value.percentage }}",
-                {% endfor %}
-              ],
-              backgroundColor: [
-                {% for value in currencyTagGroup.tagGroups %}
-                getColor(),
-                {% endfor %}
-              ],
-              label: "%"
-            });
-            var ctx = document.getElementById("{{currencyTagGroup.currency.id}}myChart").getContext("2d");
-
-            var pieChart = new Chart(ctx, {
-              type: 'doughnut',
-              data: data,
-              options: {
-                responsive: true,
-                plugins: {
-                  legend: {
-                    position: 'top',
-                  },
-                  title: {
-                    display: true,
-                    text: 'Patrimony by Tags'
-                  },
-                }
-              },
-            });
+            buildDoughnutChart(
+              "{{currencyTagGroup.currency.id}}myChart",
+              buildTagGroupData(
+                [{% for value in currencyTagGroup.tagGroups %}"{{ value.name }}",{% endfor %}],
+                [{% for value in currencyTagGroup.tagGroups %}"{{ value.total }}",{% endfor %}],
+                [{% for value in currencyTagGroup.tagGroups %}"{{ value.percentage }}",{% endfor %}],
+                "{{ currencyTagGroup.currency.symbol }}"
+              ),
+              'Patrimony by Tags'
+            );
           </script>
         {% endfor %}
       </div>
@@ -267,71 +305,74 @@ function getColor() {
     </div>
 
     <div class="tab-pane fade {% if activeTab == 5 %}show active{% endif %}" id="v-pills-assets" role="tabpanel" aria-labelledby="v-pills-assets-tab" tabindex="0">
+
+      <!-- Modal for TagGroup rows -->
+      <div class="modal fade" id="assetGroupRowsModal" tabindex="-1" aria-labelledby="assetGroupRowsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="assetGroupRowsModalLabel">Rows</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-5" style="height:450px;">
+                  <canvas id="assetGroupRowsPieChart"></canvas>
+                </div>
+                <div class="col-7">
+                  <table class="table table-sm table-striped" id="assetGroupRowsTable">
+                    <thead>
+                      <tr>
+                        <th>Account Name</th>
+                        <th style="text-align:right;">Saldo</th>
+                      </tr>
+                    </thead>
+                    <tbody id="assetGroupRowsBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="row">
         {% for assetGroup in assetsGroups %}
           <div class="col-4">
             <div><h1>{{ assetGroup.currency.name }} <span class="badge bg-secondary">{{ assetGroup.currency.symbol }}: {{ assetGroup.total|floatformat:2 }}</span></h1></div>
             <div>
-              <canvas id="{{assetGroup.currency.id}}myAssetsChart" width="400" height="400"></canvas>
+              <canvas id="{{assetGroup.currency.id}}myAssetsChart" width="400" height="400" style="cursor:pointer;"></canvas>
             </div>
             <div><h1>{{ assetGroup.currency.symbol }} {{ assetGroup.total|floatformat:2 }}</h1></div>
           </div>
           <script>
-            var i = 0;
-            var assetsData = {
-              labels: [
-                {% for value in assetGroup.tagGroups %}
-                "{{ value.name }}",
-                {% endfor %}
-              ],
-              datasets: [
+            (function() {
+              var tagGroupRows = [
+                {% for tg in assetGroup.tagGroups %}
                 {
-                  data: [
-                    {% for value in assetGroup.tagGroups %}
-                    "{{ value.total }}",
+                  name: "{{ tg.name }}",
+                  rows: [
+                    {% for row in tg.rows %}
+                    { account_name: "{{ row.account_name }}", saldo: {{ row.saldo }} },
                     {% endfor %}
                   ],
-                  backgroundColor: [
-                    {% for value in assetGroup.tagGroups %}
-                    getColor(),
-                    {% endfor %}
-                  ],
-                  label: "{{ assetGroup.currency.symbol }}"
+                  currencySymbol: "{{ assetGroup.currency.symbol }}",
                 },
-              ]
-            };
-            i = 0;
-            assetsData.datasets.push({
-              data: [
-                {% for value in assetGroup.tagGroups %}
-                "{{ value.percentage }}",
                 {% endfor %}
-              ],
-              backgroundColor: [
-                {% for value in assetGroup.tagGroups %}
-                getColor(),
-                {% endfor %}
-              ],
-              label: "%"
-            });
-            var ctx = document.getElementById("{{assetGroup.currency.id}}myAssetsChart").getContext("2d");
+              ];
 
-            var pieChart = new Chart(ctx, {
-              type: 'doughnut',
-              data: assetsData,
-              options: {
-                responsive: true,
-                plugins: {
-                  legend: {
-                    position: 'top',
-                  },
-                  title: {
-                    display: true,
-                    text: 'Assets'
-                  },
-                }
-              },
-            });
+              buildDoughnutChart(
+                "{{assetGroup.currency.id}}myAssetsChart",
+                buildTagGroupData(
+                  [{% for value in assetGroup.tagGroups %}"{{ value.name }}",{% endfor %}],
+                  [{% for value in assetGroup.tagGroups %}"{{ value.total }}",{% endfor %}],
+                  [{% for value in assetGroup.tagGroups %}"{{ value.percentage }}",{% endfor %}],
+                  "{{ assetGroup.currency.symbol }}"
+                ),
+                'Assets',
+                function(event, elements) { openTagGroupModal(elements, tagGroupRows); }
+              );
+            })();
           </script>
         {% endfor %}
           <div class="col-8">
