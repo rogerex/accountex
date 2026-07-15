@@ -10,18 +10,18 @@ from financial.reports.shared.grouping import build_groups
 
 def execute_flows_raw_sql(request):
   activeTab = request.GET.get('tab', 2)
-  activeYear = request.GET.get('year', datetime.today().year)
+  activeYears = [int(year) for year in request.GET.getlist('year')] or [datetime.today().year]
 
-  rawOutRows = __execute_out_raw_sql(activeYear)
+  rawOutRows = __execute_out_raw_sql(activeYears)
   tagGroups = __tag_accounts()
 
   filteredOutRows, deletedOutRows, ignoredOutRows, currencyTagGroups, viewCurrencyTagGroups, dataCurrencies = build_groups(rawOutRows, tagGroups)
 
-  isThisYear = int(activeYear) == datetime.today().year
+  isThisYear = activeYears == [datetime.today().year]
   if isThisYear:
     filteredOutRows = [__calculate_asset_totals(item) for item in filteredOutRows]
 
-  rawInRows = __execute_in_raw_sql(activeYear)
+  rawInRows = __execute_in_raw_sql(activeYears)
   inRows = []
   for rawRow in rawInRows:
       obj = AccountRow(rawRow[0], rawRow[1], rawRow[2], rawRow[3], rawRow[4], rawRow[5], rawRow[6])
@@ -54,14 +54,14 @@ def execute_flows_raw_sql(request):
 
     'datetime': datetime.today(),
     'activeTab': int(activeTab),
-    'activeYear': int(activeYear),
+    'activeYears': activeYears,
     'allowedYears': range(2010, datetime.today().year + 1),
     'isCurrentYear': isThisYear,
   }
 
   return render(request, 'reports/flows.html', context)
 
-def __execute_out_raw_sql(selectedYear):
+def __execute_out_raw_sql(selectedYears):
   with connection.cursor() as cursor:
 
     cursor.execute("""
@@ -82,7 +82,7 @@ INNER JOIN currency c ON c.currency_id = ac.currency_id
 WHERE
     ac.account_type_id IN (6, 8, 10)
 """
-    + (f" AND YEAR(s.seat_datetime) = {selectedYear} " if int(selectedYear) > 0 else "") +
+    + (f" AND YEAR(s.seat_datetime) IN ({','.join(str(year) for year in selectedYears)}) " if 0 not in selectedYears else "") +
 """
 GROUP BY
     b.account_id, b.account_name
@@ -127,7 +127,7 @@ def __tag_accounts():
     },
     {
       'name': 'Especiales',
-      'prefixs': ['Pareja', 'Mireya', 'ZZ - Deprecated - Abigail'],
+      'prefixs': ['Pareja', 'Mireya', 'ZZ - Deprecated - Abigail', 'ZZ - Deprecated - Mireya'],
     },
     {
       'name': 'Regalos',
@@ -147,11 +147,11 @@ def __tag_accounts():
     },
     {
       'name': 'Xitas',
-      'prefixs': ['Xitas', 'ZZ - Deprecated - Xitas:', 'ZZ - Deprecated - Mireya'],
+      'prefixs': ['Xitas', 'ZZ - Deprecated - Xitas:'],
     },
   ]
 
-def __execute_in_raw_sql(selectedYear):
+def __execute_in_raw_sql(selectedYears):
   with connection.cursor() as cursor:
 
     cursor.execute("""
@@ -172,7 +172,7 @@ INNER JOIN currency c ON c.currency_id = ac.currency_id
 WHERE
     ac.account_type_id IN (4, 5, 11)
 """
-    + (f" AND YEAR(s.seat_datetime) = {selectedYear} " if int(selectedYear) > 0 else "") +
+    + (f" AND YEAR(s.seat_datetime) IN ({','.join(str(year) for year in selectedYears)}) " if 0 not in selectedYears else "") +
 """
 GROUP BY
     b.account_id, b.account_name

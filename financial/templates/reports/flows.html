@@ -19,19 +19,19 @@
 {% block content %}
 <h1>Generated at: <span class="badge bg-secondary">{{ datetime }}</span></h1>
 <form method="get" action="{% url 'flows_report' %}">
-    <label for="my_years">Select year:</label>
-    <select name="year" id="my_year" onchange="this.form.submit()">
-      <option value="0" {% if activeYear == 0 %}selected{% endif %}>All</option>
+    <label for="my_years">Select year(s):</label>
+    <select name="year" id="my_years" multiple size="6">
+      <option value="0" {% if 0 in activeYears %}selected{% endif %}>All</option>
       {% for count in allowedYears %}
-        <option value="{{ count }}" {% if activeYear == count %}selected{% endif %}>{{ count }}</option>
+        <option value="{{ count }}" {% if count in activeYears %}selected{% endif %}>{{ count }}</option>
       {% endfor %}
     </select>
-    <noscript><input type="submit" value="Apply"></noscript>
+    <input type="submit" value="Apply">
 </form>
 <br />
 
 <script>
-var colors = ["#46BFBD", "#F7464A", "#FDB45C", "#949FB1", "#4D5360", "#FF5A5E", "#5AD3D1", "#FFC870", "#A8B3C5", "#616774"]
+var colors = ["#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6", "#bcf60c", "#fabebe", "#008080", "#e6beff", "#9a6324", "#fffac8", "#800000", "#aaffc3", "#808000", "#ffd8b1", "#000075", "#808080"]
 var i = 0;
 
 function getColor() {
