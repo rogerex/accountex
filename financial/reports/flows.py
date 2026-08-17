@@ -127,7 +127,7 @@ def __tag_accounts():
     },
     {
       'name': 'Especiales',
-      'prefixs': ['Pareja', 'Mireya', 'ZZ - Deprecated - Abigail', 'ZZ - Deprecated - Mireya'],
+      'prefixs': ['Pareja', 'Persona: Mireya', 'ZZ - Deprecated - Abigail', 'ZZ - Deprecated - Mireya'],
     },
     {
       'name': 'Regalos',

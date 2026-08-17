@@ -142,9 +142,9 @@ _CONVERSION_RATES = {
     ('BOB', 'BOB', 'Oficial'):   1.0,
     ('BOB', 'BOB', 'Paralelo'):  1.0,
     ('USD', 'BOB', 'Oficial'):   6.86,
-    ('USD', 'BOB', 'Paralelo'):  9.54,
+    ('USD', 'BOB', 'Paralelo'):  11.54,
     ('BOB', 'USD', 'Oficial'):   1 / 6.86,
-    ('BOB', 'USD', 'Paralelo'):  1 / 9.54,
+    ('BOB', 'USD', 'Paralelo'):  1 / 11.54,
 }
 
 def __build_currency_matrix(viewCurrencyTagGroups):
