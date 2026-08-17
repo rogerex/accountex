@@ -26,6 +26,7 @@
         <option value="{{ count }}" {% if count in activeYears %}selected{% endif %}>{{ count }}</option>
       {% endfor %}
     </select>
+    <input type="hidden" name="tab" id="tab-hidden-input" value="{{ activeTab }}">
     <input type="submit" value="Apply">
 </form>
 <br />
@@ -42,11 +43,11 @@ function getColor() {
 
 <div class="d-flex align-items-start">
   <div class="nav flex-column nav-pills me-3" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-    <a class="nav-link {% if activeTab == 1 %}active{% endif %}" id="v-pills-charts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-charts" role="tab" aria-controls="v-pills-charts" aria-selected="true" href="{% url 'patrimony_report' %}">Charts</a>
-    <a class="nav-link {% if activeTab == 2 %}active{% endif %}" id="v-pills-out-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-out-accounts" role="tab" aria-controls="v-pills-out-accounts" aria-selected="false" href="{% url 'patrimony_report' %}?tab=2">Outs</a>
-    <a class="nav-link {% if activeTab == 3 %}active{% endif %}" id="v-pills-details-tab" data-bs-toggle="pill" data-bs-target="#v-pills-details" role="tab" aria-controls="v-pills-details" aria-selected="false" href="{% url 'patrimony_report' %}?tab=3">Details by Currency</a>
-    <a class="nav-link {% if activeTab == 4 %}active{% endif %}" id="v-pills-other-rows-tab" data-bs-toggle="pill" data-bs-target="#v-pills-other-rows" role="tab" aria-controls="v-pills-other-rows" aria-selected="false" href="{% url 'patrimony_report' %}?tab=4">Deleted and Ignored Rows</a>
-    <a class="nav-link {% if activeTab == 5 %}active{% endif %}" id="v-pills-in-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-in-accounts" role="tab" aria-controls="v-pills-in-accounts" aria-selected="false" href="{% url 'patrimony_report' %}?tab=5">Ins</a>
+    <a class="nav-link {% if activeTab == 1 %}active{% endif %}" id="v-pills-charts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-charts" role="tab" aria-controls="v-pills-charts" aria-selected="true" href="{% url 'flows_report' %}?tab=1">Charts</a>
+    <a class="nav-link {% if activeTab == 2 %}active{% endif %}" id="v-pills-out-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-out-accounts" role="tab" aria-controls="v-pills-out-accounts" aria-selected="false" href="{% url 'flows_report' %}?tab=2">Outs</a>
+    <a class="nav-link {% if activeTab == 3 %}active{% endif %}" id="v-pills-details-tab" data-bs-toggle="pill" data-bs-target="#v-pills-details" role="tab" aria-controls="v-pills-details" aria-selected="false" href="{% url 'flows_report' %}?tab=3">Details by Currency</a>
+    <a class="nav-link {% if activeTab == 4 %}active{% endif %}" id="v-pills-other-rows-tab" data-bs-toggle="pill" data-bs-target="#v-pills-other-rows" role="tab" aria-controls="v-pills-other-rows" aria-selected="false" href="{% url 'flows_report' %}?tab=4">Deleted and Ignored Rows</a>
+    <a class="nav-link {% if activeTab == 5 %}active{% endif %}" id="v-pills-in-accounts-tab" data-bs-toggle="pill" data-bs-target="#v-pills-in-accounts" role="tab" aria-controls="v-pills-in-accounts" aria-selected="false" href="{% url 'flows_report' %}?tab=5">Ins</a>
   </div>
   <div class="tab-content w-100" id="v-pills-tabContent">
     <div class="tab-pane fade {% if activeTab == 1 %}show active{% endif %}" id="v-pills-charts" role="tabpanel" aria-labelledby="v-pills-charts-tab" tabindex="0">
@@ -356,6 +357,24 @@ updateTheme()
 
 // Update theme when the preferred scheme changes
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme)
+</script>
+
+<script>
+// Keep the active tab in the URL (and the year form) so a page refresh reopens the same tab
+(function() {
+  var tabHiddenInput = document.getElementById('tab-hidden-input');
+  var tabLinks = document.querySelectorAll('#v-pills-tab .nav-link[data-bs-toggle="pill"]');
+  tabLinks.forEach(function(link) {
+    link.addEventListener('shown.bs.tab', function(event) {
+      var linkUrl = new URL(event.target.getAttribute('href'), window.location.origin);
+      var tab = linkUrl.searchParams.get('tab') || '1';
+      var currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('tab', tab);
+      window.history.replaceState(null, '', currentUrl);
+      if (tabHiddenInput) tabHiddenInput.value = tab;
+    });
+  });
+})();
 </script>
 
 {% endblock %}

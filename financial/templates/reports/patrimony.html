@@ -434,4 +434,20 @@ updateTheme()
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme)
 </script>
 
+<script>
+// Keep the active tab in the URL so a page refresh reopens the same tab
+(function() {
+  var tabLinks = document.querySelectorAll('#v-pills-tab .nav-link[data-bs-toggle="pill"]');
+  tabLinks.forEach(function(link) {
+    link.addEventListener('shown.bs.tab', function(event) {
+      var linkUrl = new URL(event.target.getAttribute('href'), window.location.origin);
+      var tab = linkUrl.searchParams.get('tab') || '1';
+      var currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set('tab', tab);
+      window.history.replaceState(null, '', currentUrl);
+    });
+  });
+})();
+</script>
+
 {% endblock %}
